@@ -1,0 +1,17 @@
+django-cors-headers
+django-extensions
+django-extras
+django-filter
+django-rest-swagger
+django
+djangorestframework
+drf-nested-routers
+gunicorn
+Markdown
+Pillow
+pip-tools
+pytz
+pyyaml
+requests
+six
+wheel

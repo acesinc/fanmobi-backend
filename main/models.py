@@ -20,11 +20,9 @@ import main.constants as constants
 logger = logging.getLogger('fanmobi')
 
 # TODO:
-# - mark messages as read
-# - permissions (can artists send users messages)
 # - current user location?
 # - login/logout
-# - upload avatar (and thumb)
+# - upload avatar (and thumb) - image storage and serving
 
 class Genre(models.Model):
     """
@@ -44,22 +42,18 @@ class ArtistProfile(models.Model):
     name = models.CharField(max_length=256, unique=True)
     hometown = models.CharField(max_length=256, blank=True, null=True)
     bio = models.CharField(max_length=8192, blank=True, null=True)
-    avatar_url_thumb = models.URLField(max_length=2048)
-    avatar_url = models.URLField(max_length=2048)
-    website = models.URLField(max_length=2048)
-    facebook_id = models.Charfield(max_length=256)
-    twitter_id = models.Charfield(max_length=256)
-    youtube_id = models.Charfield(max_length=256)
-    soundcloud_id = models.Charfield(max_length=256)
-    itunes_url = models.URLField(max_length=2048)
-    ticket_url = models.URLField(max_length=2048)
-    merch_url = models.URLField(max_length=2048)
-    paypal_email = models.EmailField()
-    current_latitude = models.DecimalField(max_digits=8, decimal_places=3,
-        blank=True, null=True)
-    current_longitude = models.DecimalField(max_digits=8, decimal_places=3,
-        blank=True, null=True)
-    next_show = models.ForeignKey('Show', related_name='artists')
+    avatar_url_thumb = models.URLField(max_length=2048, blank=True, null=True)
+    avatar_url = models.URLField(max_length=2048, blank=True, null=True)
+    website = models.URLField(max_length=2048, blank=True, null=True)
+    facebook_id = models.CharField(max_length=256, blank=True, null=True)
+    twitter_id = models.CharField(max_length=256, blank=True, null=True)
+    youtube_id = models.CharField(max_length=256, blank=True, null=True)
+    soundcloud_id = models.CharField(max_length=256, blank=True, null=True)
+    itunes_url = models.URLField(max_length=2048, blank=True, null=True)
+    ticket_url = models.URLField(max_length=2048, blank=True, null=True)
+    merch_url = models.URLField(max_length=2048, blank=True, null=True)
+    paypal_email = models.EmailField(null=True)
+    next_show = models.ForeignKey('Show', related_name='artists', null=True)
     genres = models.ManyToManyField(
         Genre,
         related_name='artists',
@@ -97,6 +91,11 @@ class BasicProfile(models.Model):
         related_name='connected_users',
         db_table='artist_user'
     )
+
+    current_latitude = models.DecimalField(max_digits=8, decimal_places=3,
+        blank=True, null=True)
+    current_longitude = models.DecimalField(max_digits=8, decimal_places=3,
+        blank=True, null=True)
 
     def __repr__(self):
         return 'Profile: %s' % self.user.username
@@ -155,7 +154,7 @@ class BasicProfile(models.Model):
         # create User object
         # if this user is an ORG_STEWARD or APPS_MALL_STEWARD, give them
         # access to the admin site
-        groups = kwargs.get('groups', ['USER'])
+        groups = kwargs.get('groups', ['FAN'])
         if 'ADMIN' in groups:
             user = django.contrib.auth.models.User.objects.create_superuser(
                 username=username, email=email, password=password)
@@ -168,7 +167,7 @@ class BasicProfile(models.Model):
             # logger.info('creating user: %s' % username)
 
         # add user to group(s) (i.e. Roles - FAN, ARTIST, ADMIN). If no
-        # specific Group is provided, we will default to USER
+        # specific Group is provided, we will default to FAN
         for i in groups:
             g = django.contrib.auth.models.Group.objects.get(name=i)
             user.groups.add(g)
@@ -189,6 +188,11 @@ class Message(models.Model):
     created_at = models.DateTimeField(auto_now=True)
     attachment = models.URLField(max_length=2048)
     artist = models.ForeignKey(ArtistProfile, related_name='messages')
+    dismissed_by = models.ManyToManyField(
+        'BasicProfile',
+        related_name='dismissed_messages',
+        db_table='message_basic_profile'
+    )
 
     def __repr__(self):
         return '%s:%s' % (self.artist.name, self.created_at)
@@ -199,6 +203,12 @@ class Message(models.Model):
 class Venue(models.Model):
     """
     A venue
+
+    # TODO:
+        * address
+        * phone
+        * email
+        * twitter, facebook, website
     """
     name = models.CharField(max_length=1024, unique=True)
     description = models.CharField(max_length=8192, blank=True, null=True)
@@ -225,5 +235,21 @@ class Show(models.Model):
 
     def __str__(self):
         return '%s:%s:%s' % (self.artist.name, self.venue.name, self.start)
+
+class Permissions(models.Model):
+    """
+    Permissions between an artist and a user
+    """
+    artist = models.ForeignKey(ArtistProfile, related_name='permissions')
+    user = models.ForeignKey(BasicProfile, related_name='permissions')
+    # artist can send messags to this user
+    send_messages = models.BooleanField(default=False)
+
+    def __repr__(self):
+        return 'permissions %s:%s' % (self.artist.basic_profile.user.username, self.user.user.username)
+
+    def __str__(self):
+        return 'permissions %s:%s' % (self.artist.basic_profile.user.username, self.user.user.username)
+
 
 

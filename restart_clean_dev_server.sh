@@ -14,7 +14,7 @@ export DJANGO_SETTINGS_MODULE=fanmobi.settings
 
 # remove existing database and all migrations
 rm db.sqlite3
-rm -r app/migrations/*
+rm -r main/migrations/*
 # create new database with a single new migration
 python manage.py makemigrations main
 python manage.py migrate
@@ -31,4 +31,4 @@ python manage.py test
 # load sample data (uses runscript from django-extensions package)
 echo 'Loading sample data...'
 python manage.py runscript sample_data_generator
-python manage.py runserver
+python manage.py runserver 8001

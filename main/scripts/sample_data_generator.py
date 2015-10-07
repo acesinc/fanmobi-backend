@@ -1,0 +1,108 @@
+"""
+Creates test data
+
+************************************WARNING************************************
+Many of the unit tests depend on data set in this script. Always
+run the unit tests (python manage.py test) after making any changes to this
+data!!
+************************************WARNING************************************
+"""
+import datetime
+import os
+import pytz
+import sys
+
+from PIL import Image
+
+sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../../')))
+
+import pytz
+
+import django.contrib.auth
+
+from main import models as models
+from main import services
+
+TEST_IMG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_images') + '/'
+
+def run():
+    """
+    Creates basic sample data
+    """
+    # Create Groups
+    models.BasicProfile.create_groups()
+
+    ############################################################################
+    #                               Genres
+    ############################################################################
+    alternative = models.Genre(name='Alternative')
+    alternative.save()
+
+    blues = models.Genre(name='Blues')
+    blues.save()
+
+    rock = models.Genre(name='Rock')
+    rock.save()
+
+    country = models.Genre(name='Country')
+    country.save()
+
+    hip_hop = models.Genre(name='Hip-Hop')
+    hip_hop.save()
+
+    ############################################################################
+    #                               Venues
+    ############################################################################
+    nine_thirty_club = models.Venue(name='9:30 Club',
+        description='State-of-the-art concert space presents top-name rock, punk, hip-hop and country acts nightly',
+        latitude=38.918229, longitude=-77.023795)
+    nine_thirty_club.save()
+
+    rams_head_live_bmore = models.Venue(name='Rams Head Live',
+        description='Rams Head Live! is an indoor music venue, club, and bar located in Baltimore, Maryland',
+        latitude=39.290128, longitude=-76.607246)
+    rams_head_live_bmore.save()
+
+    ############################################################################
+    #                               Artists
+    ############################################################################
+    kwargs = {'email': 'counting_crows@gmail.com', 'groups': ['ARTIST']}
+    counting_crows_basic = models.BasicProfile.create_user(
+        'counting_crows', **kwargs)
+    counting_crows_artist = models.ArtistProfile(basic_profile=counting_crows_basic,
+        name='Counting Crows')
+    counting_crows_artist.save()
+    counting_crows_artist.genres.add(alternative)
+
+    ############################################################################
+    #                               Shows
+    ############################################################################
+    start = pytz.timezone('America/New_York').localize(
+        datetime.datetime(2015, 9, 18, hour=20, minute=0))
+    end = start + datetime.timedelta(hours=3)
+    counting_crows_show_1 = models.Show(start=start, end=end,
+        artist=counting_crows_artist, venue=rams_head_live_bmore)
+    counting_crows_show_1.save()
+
+    ############################################################################
+    #                               Users
+    ############################################################################
+    kwargs = {'email': 'john@gmail.com', 'groups': ['FAN']}
+    john = models.BasicProfile.create_user(
+        'john', **kwargs)
+
+    kwargs = {'email': 'alice@gmail.com', 'groups': ['FAN']}
+    alice = models.BasicProfile.create_user(
+        'alice', **kwargs)
+
+    kwargs = {'email': 'bob@gmail.com', 'groups': ['FAN']}
+    bob = models.BasicProfile.create_user(
+        'bob', **kwargs)
+
+
+    ############################################################################
+    #                               Messages
+    ############################################################################
+
+if __name__ == "__main__":
+    run()

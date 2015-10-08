@@ -99,10 +99,17 @@ def run():
     bob = models.BasicProfile.create_user(
         'bob', **kwargs)
 
+    counting_crows_artist.connected_users.add(bob)
+
 
     ############################################################################
     #                               Messages
     ############################################################################
+    msg = models.Message(
+        text='The Counting Crows are playing a show next week!',
+        artist=counting_crows_artist)
+    msg.save()
+
 
 if __name__ == "__main__":
     run()

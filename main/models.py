@@ -20,8 +20,6 @@ import main.constants as constants
 logger = logging.getLogger('fanmobi')
 
 # TODO:
-# - current user location?
-# - login/logout
 # - upload avatar (and thumb) - image storage and serving
 
 class Genre(models.Model):
@@ -58,6 +56,12 @@ class ArtistProfile(models.Model):
         Genre,
         related_name='artists',
         db_table='artist_genre')
+        # artist->user connections
+    connected_users = models.ManyToManyField(
+        'BasicProfile',
+        related_name='connected_artists',
+        db_table='artist_user'
+    )
     # thank you message
     # thank you attachment
 
@@ -84,13 +88,6 @@ class BasicProfile(models.Model):
     # https://docs.djangoproject.com/en/1.8/topics/auth/customizing/#extending-the-existing-user-model
     user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True,
         blank=True)
-
-    # artist->user connections
-    connected_artists = models.ManyToManyField(
-        'ArtistProfile',
-        related_name='connected_users',
-        db_table='artist_user'
-    )
 
     current_latitude = models.DecimalField(max_digits=8, decimal_places=3,
         blank=True, null=True)
@@ -186,7 +183,7 @@ class Message(models.Model):
     """
     text = models.CharField(max_length=8192)
     created_at = models.DateTimeField(auto_now=True)
-    attachment = models.URLField(max_length=2048)
+    attachment = models.URLField(max_length=2048, blank=True, null=True)
     artist = models.ForeignKey(ArtistProfile, related_name='messages')
     dismissed_by = models.ManyToManyField(
         'BasicProfile',

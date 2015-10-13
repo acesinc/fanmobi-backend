@@ -45,10 +45,28 @@ class BasicProfileViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class ArtistViewSet(viewsets.ModelViewSet):
+class ArtistViewSet(viewsets.ViewSet):
     queryset = services.get_all_artists()
     permission_classes = (permissions.IsFan,)
     serializer_class = serializers.ArtistProfileSerializer
+
+    def create(self, request):
+        """
+        Create a new artist
+        """
+        try:
+            logger.debug('inside ArtistViewSet.create, data: %s' % request.data)
+            serializer = serializers.ArtistProfileSerializer(data=request.data,
+                context={'request': request}, partial=True)
+            if not serializer.is_valid():
+                logger.error('%s' % serializer.errors)
+                return Response(serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            raise e
 
 
 class VenueViewSet(viewsets.ModelViewSet):

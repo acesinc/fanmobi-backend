@@ -16,6 +16,10 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Genre
 
+        extra_kwargs = {
+            'name': {'validators': []}
+        }
+
 
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,6 +45,10 @@ class UserShortSerializer(serializers.ModelSerializer):
         model = django.contrib.auth.models.User
         fields = ('username', 'email')
 
+        extra_kwargs = {
+            'username': {'validators': []}
+        }
+
 
 class BasicProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
@@ -53,58 +61,131 @@ class BasicProfileShortSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.BasicProfile
         fields = ('user', 'id')
+        read_only_fields = ('id',)
 
 
-class ArtistProfileSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=30)
-    name = serializers.CharField(max_length=128)
-    email = serializers.EmailField(required=False)
-    hometown = serializers.CharField(max_length=128, required=False)
-    connected_users = serializers.ListField(child=serializers.CharField(
-        max_length=30), read_only=True)
-    genres = serializers.ListField(child=serializers.CharField(
-        max_length=50))
+class ArtistProfileSerializer(serializers.ModelSerializer):
+    basic_profile = BasicProfileShortSerializer()
+    connected_users = BasicProfileShortSerializer(many=True, required=False)
+    genres = GenreSerializer(required=False, many=True)
+
+    class Meta:
+        model = models.ArtistProfile
 
 
     def validate(self, data):
         logger.debug('inside of ArtistProfileSerializer.validate. data: %s' % data)
-        username = data.get('username', None)
-        basic_profile = models.BasicProfile.objects.filter(user__username=username).first()
-        name = data.get('name', None)
-        data['hometown'] = data.get('hometown', None)
+
+        # get profile info
+        # it's an error not to provide a username here
+        username = data['basic_profile']['user'].get('username', None)
+        basic_profile = models.BasicProfile.objects.filter(
+            user__username=username).first()
         if not basic_profile:
-            kwargs = {'email': data.get('email', None),
+            kwargs = {'email': data['basic_profile']['user'].get('email', None),
                 'groups': ['ARTIST']}
             p = models.BasicProfile.create_user(username, **kwargs)
             data['basic_profile'] = p
         else:
             data['basic_profile'] = basic_profile
 
-        if 'genres' in data:
-            data['genres'] = models.Genre.objects.filter(name__in=data['genres'])
+        # if method is a PATCH, we don't want to arbitrarily set fields to None
+        # if they were left out of the request data, since a PATCH request
+        # need only update one or more fields. If the user didn't specify the
+        # field, it shouldn't be updated
+        if self.context['request'].method == 'PATCH':
+            # TODO: support PATCH
+            pass
+        else:
+            data['name'] = data.get('name', None)
+            data['hometown'] = data.get('hometown', None)
+            data['bio'] = data.get('bio', None)
+            data['website'] = data.get('website', None)
+            data['facebook_id'] = data.get('facebook_id', None)
+            data['twitter_id'] = data.get('twitter_id', None)
+            data['youtube_id'] = data.get('youtube_id', None)
+            data['soundcloud_id'] = data.get('soundcloud_id', None)
+            data['itunes_url'] = data.get('itunes_url', None)
+            data['ticket_url'] = data.get('ticket_url', None)
+            data['merch_url'] = data.get('merch_url', None)
+            data['paypal_email'] = data.get('paypal_email', None)
+
+            # next_show set automatically (get next show in models.Show for
+            # this artist)
+
+            if 'genres' in data:
+                genres = []
+                for i in data['genres']:
+                    g = models.Genre.objects.get(name=i['name'])
+                    genres.append(g)
+                data['genres'] = genres
+            else:
+                data['genres'] = []
+
+            if 'connected_users' in data:
+                users = []
+                for i in data['connected_users']:
+                    u = models.BasicProfile.objects.get(user__username=i['user']['username'])
+                    users.append(u)
+                data['connected_users'] = users
+            else:
+                data['connected_users'] = []
 
         return data
 
     def create(self, validated_data):
         logger.debug('inside of ArtistProfileSerializer.create')
-        a = models.ArtistProfile(basic_profile=validated_data['basic_profile'],
-            name=validated_data['name'], hometown=validated_data['hometown'])
+        a = models.ArtistProfile(
+            basic_profile=validated_data['basic_profile'],
+            name=validated_data['name'],
+            hometown=validated_data['hometown'],
+            bio=validated_data['bio'],
+            website=validated_data['website'],
+            facebook_id=validated_data['facebook_id'],
+            twitter_id=validated_data['twitter_id'],
+            youtube_id=validated_data['youtube_id'],
+            soundcloud_id=validated_data['soundcloud_id'],
+            itunes_url=validated_data['itunes_url'],
+            ticket_url=validated_data['ticket_url'],
+            merch_url=validated_data['merch_url'],
+            paypal_email=validated_data['paypal_email'])
+
         a.save()
         for i in validated_data['genres']:
             a.genres.add(i)
 
         return a
 
-    def to_representation(self, obj):
-        connected_users = []
-        for i in obj.connected_users.all():
-            connected_users.append(i.user.username)
-        return {
-            'username': obj.basic_profile.user.username,
-            'hometown': obj.hometown,
-            'connected_users': connected_users,
-            'name': obj.name
-        }
+    def update(self, instance, validated_data):
+        if self.context['request'].method == 'PATCH':
+            # TODO: handle PATCHING (partial updates)
+            pass
+        else:
+            # if it's not a partial update, we know every field will be present
+            # in validated_data (even if it's None)
+            instance.hometown = validated_data['hometown']
+            instance.name = validated_data['name']
+            instance.bio = validated_data['bio']
+            instance.website = validated_data['website']
+            instance.facebook_id = validated_data['facebook_id']
+            instance.twitter_id = validated_data['twitter_id']
+            instance.youtube_id = validated_data['youtube_id']
+            instance.soundcloud_id = validated_data['soundcloud_id']
+            instance.itunes_url = validated_data['itunes_url']
+            instance.merch_url = validated_data['merch_url']
+            instance.paypal_email = validated_data['paypal_email']
+
+            instance.genres.clear()
+            for i in validated_data['genres']:
+                instance.genres.add(i)
+            instance.save()
+
+            instance.connected_users.clear()
+            for i in validated_data['connected_users']:
+                instance.connected_users.add(i)
+            instance.save()
+
+            return instance
 
 
 class ArtistProfileShortSerializer(serializers.ModelSerializer):

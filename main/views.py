@@ -45,7 +45,7 @@ class BasicProfileViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class ArtistViewSet(viewsets.ViewSet):
+class ArtistViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_artists()
     permission_classes = (permissions.IsFan,)
     serializer_class = serializers.ArtistProfileSerializer
@@ -58,6 +58,25 @@ class ArtistViewSet(viewsets.ViewSet):
             logger.debug('inside ArtistViewSet.create, data: %s' % request.data)
             serializer = serializers.ArtistProfileSerializer(data=request.data,
                 context={'request': request}, partial=True)
+            if not serializer.is_valid():
+                logger.error('%s' % serializer.errors)
+                return Response(serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            raise e
+
+    def update(self, request, pk=None):
+        """
+        Create a new artist
+        """
+        try:
+            logger.debug('inside ArtistViewSet.update, data: %s' % request.data)
+            instance = self.get_queryset().get(pk=pk)
+            serializer = serializers.ArtistProfileSerializer(instance,
+                data=request.data, context={'request': request}, partial=True)
             if not serializer.is_valid():
                 logger.error('%s' % serializer.errors)
                 return Response(serializer.errors,

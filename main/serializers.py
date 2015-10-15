@@ -60,7 +60,7 @@ class BasicProfileShortSerializer(serializers.ModelSerializer):
     user = UserShortSerializer()
     class Meta:
         model = models.BasicProfile
-        fields = ('user', 'id')
+        fields = ('user', 'id', 'current_latitude', 'current_longitude')
         read_only_fields = ('id',)
 
 
@@ -77,6 +77,9 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
         logger.debug('inside of ArtistProfileSerializer.validate. data: %s' % data)
 
         # get profile info
+        data['current_latitude'] = data['basic_profile'].get('current_latitude', '0')
+        data['current_longitude'] = data['basic_profile'].get('current_longitude', '0')
+
         # it's an error not to provide a username here
         username = data['basic_profile']['user'].get('username', None)
         basic_profile = models.BasicProfile.objects.filter(
@@ -135,8 +138,9 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         logger.debug('inside of ArtistProfileSerializer.create')
+        profile = validated_data['basic_profile']
         a = models.ArtistProfile(
-            basic_profile=validated_data['basic_profile'],
+            basic_profile=profile,
             name=validated_data['name'],
             hometown=validated_data['hometown'],
             bio=validated_data['bio'],
@@ -153,6 +157,11 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
         a.save()
         for i in validated_data['genres']:
             a.genres.add(i)
+
+        # support updates to the underlying BasicProfile object
+        profile.current_latitude = validated_data['current_latitude']
+        profile.current_longitude = validated_data['current_longitude']
+        profile.save()
 
         return a
 
@@ -185,6 +194,13 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
                 instance.connected_users.add(i)
             instance.save()
 
+            # support updates to the underlying BasicProfile object
+            profile = instance.basic_profile
+            # support updates to the underlying BasicProfile object
+            profile.current_latitude = validated_data['current_latitude']
+            profile.current_longitude = validated_data['current_longitude']
+            profile.save()
+
             return instance
 
 
@@ -194,20 +210,20 @@ class ArtistProfileShortSerializer(serializers.ModelSerializer):
         fields = ('name', 'id')
 
 
-class VenueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Venue
+# class VenueSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = models.Venue
 
 
-class VenueShortSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Venue
-        fields = ('name', 'id')
+# class VenueShortSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = models.Venue
+#         fields = ('name', 'id')
 
 
 class ShowSerializer(serializers.ModelSerializer):
-    artist = ArtistProfileShortSerializer()
-    venue = VenueShortSerializer()
+    # artist = ArtistProfileShortSerializer()
+    # venue = VenueShortSerializer()
     class Meta:
         model = models.Show
 

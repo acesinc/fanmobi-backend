@@ -52,16 +52,18 @@ def run():
 
     ############################################################################
     #                               Venues
+    # TODO: add this back later (if we end up supporting Venues as their own
+    #        objects)
     ############################################################################
-    nine_thirty_club = models.Venue(name='9:30 Club',
-        description='State-of-the-art concert space presents top-name rock, punk, hip-hop and country acts nightly',
-        latitude=38.918229, longitude=-77.023795)
-    nine_thirty_club.save()
+    # nine_thirty_club = models.Venue(name='9:30 Club',
+    #     description='State-of-the-art concert space presents top-name rock, punk, hip-hop and country acts nightly',
+    #     latitude=38.918229, longitude=-77.023795)
+    # nine_thirty_club.save()
 
-    rams_head_live_bmore = models.Venue(name='Rams Head Live',
-        description='Rams Head Live! is an indoor music venue, club, and bar located in Baltimore, Maryland',
-        latitude=39.290128, longitude=-76.607246)
-    rams_head_live_bmore.save()
+    # rams_head_live_bmore = models.Venue(name='Rams Head Live',
+    #     description='Rams Head Live! is an indoor music venue, club, and bar located in Baltimore, Maryland',
+    #     latitude=39.290128, longitude=-76.607246)
+    # rams_head_live_bmore.save()
 
     ############################################################################
     #                               Artists
@@ -81,7 +83,8 @@ def run():
         datetime.datetime(2015, 9, 18, hour=20, minute=0))
     end = start + datetime.timedelta(hours=3)
     counting_crows_show_1 = models.Show(start=start, end=end,
-        artist=counting_crows_artist, venue=rams_head_live_bmore)
+        artist=counting_crows_artist, latitude=38.918229, longitude=-77.023795,
+        venue_name='9:30 Club')
     counting_crows_show_1.save()
 
     ############################################################################

@@ -197,35 +197,45 @@ class Message(models.Model):
     def __str__(self):
         return '%s:%s' % (self.artist.name, self.created_at)
 
-class Venue(models.Model):
-    """
-    A venue
+# TODO: Ultimately, Venue should probably be a separate model with a unique name
+# For now (since we don't know who would manage those entries), just
+# denormalize
 
-    # TODO:
-        * address
-        * phone
-        * email
-        * twitter, facebook, website
-    """
-    name = models.CharField(max_length=1024, unique=True)
-    description = models.CharField(max_length=8192, blank=True, null=True)
-    latitude = models.DecimalField(max_digits=8, decimal_places=3)
-    longitude = models.DecimalField(max_digits=8, decimal_places=3)
+# class Venue(models.Model):
+#     """
+#     A venue
 
-    def __repr__(self):
-        return self.name
+#     # TODO:
+#         * address
+#         * phone
+#         * email
+#         * twitter, facebook, website
+#     """
+#     name = models.CharField(max_length=1024, unique=True)
+#     description = models.CharField(max_length=8192, blank=True, null=True)
+#     latitude = models.DecimalField(max_digits=8, decimal_places=3)
+#     longitude = models.DecimalField(max_digits=8, decimal_places=3)
 
-    def __str__(self):
-        return self.name
+#     def __repr__(self):
+#         return self.name
+
+#     def __str__(self):
+#         return self.name
 
 class Show(models.Model):
     """
     A Show
+
+    TODO: Should probably have a foreign key to a models.Venue, but for now
+    keep it simple
     """
     start = models.DateTimeField()
     end = models.DateTimeField()
     artist = models.ForeignKey(ArtistProfile, related_name='shows')
-    venue = models.ForeignKey(Venue, related_name='shows')
+    # venue = models.ForeignKey(Venue, related_name='shows')
+    latitude = models.DecimalField(max_digits=8, decimal_places=3)
+    longitude = models.DecimalField(max_digits=8, decimal_places=3)
+    venue_name = models.CharField(max_length=1024, blank=True, null=True)
 
     def __repr__(self):
         return '%s:%s:%s' % (self.artist.name, self.venue.name, self.start)

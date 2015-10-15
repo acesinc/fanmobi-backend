@@ -39,8 +39,8 @@ def get_profiles_by_role(role):
 def get_all_artists():
     return models.ArtistProfile.objects.all()
 
-def get_all_venues():
-    return models.Venue.objects.all()
+# def get_all_venues():
+#     return models.Venue.objects.all()
 
 def get_all_shows():
     return models.Show.objects.all()

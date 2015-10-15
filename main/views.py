@@ -88,10 +88,10 @@ class ArtistViewSet(viewsets.ModelViewSet):
             raise e
 
 
-class VenueViewSet(viewsets.ModelViewSet):
-    queryset = services.get_all_venues()
-    permission_classes = (permissions.IsFan,)
-    serializer_class = serializers.VenueSerializer
+# class VenueViewSet(viewsets.ModelViewSet):
+#     queryset = services.get_all_venues()
+#     permission_classes = (permissions.IsFan,)
+#     serializer_class = serializers.VenueSerializer
 
 
 class ShowViewSet(viewsets.ModelViewSet):

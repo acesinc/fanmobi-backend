@@ -26,6 +26,12 @@ def get_all_genres():
 def get_all_users():
     return django.contrib.auth.models.User.objects.all()
 
+def get_artist_by_id(id):
+    try:
+        return models.ArtistProfile.objects.get(id=id)
+    except models.ArtistProfile.DoesNotExist:
+        return None
+
 def get_all_groups():
     return django.contrib.auth.models.Group.objects.all()
 
@@ -47,3 +53,9 @@ def get_all_shows():
 
 def get_all_messages():
     return models.Message.objects.all()
+
+def delete_show(username, show):
+    profile = get_profile(username)
+    if username != show.artist.basic_profile.user.username and profile.highest_role() not in ['ADMIN']:
+        raise errors.PermissionDenied('Cannot delete a show for another artist')
+    show.delete()

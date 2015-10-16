@@ -7,7 +7,9 @@ import django.contrib.auth
 
 from rest_framework import serializers
 
+import main.errors as errors
 import main.models as models
+import main.services as services
 
 # Get an instance of a logger
 logger = logging.getLogger('fanmobi')
@@ -80,17 +82,20 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
         data['current_latitude'] = data['basic_profile'].get('current_latitude', '0')
         data['current_longitude'] = data['basic_profile'].get('current_longitude', '0')
 
-        # it's an error not to provide a username here
-        username = data['basic_profile']['user'].get('username', None)
-        basic_profile = models.BasicProfile.objects.filter(
-            user__username=username).first()
-        if not basic_profile:
-            kwargs = {'email': data['basic_profile']['user'].get('email', None),
-                'groups': ['ARTIST']}
-            p = models.BasicProfile.create_user(username, **kwargs)
-            data['basic_profile'] = p
-        else:
-            data['basic_profile'] = basic_profile
+        # it's an error not to provide a username here if an artist is being created
+        # TODO: is this really now it will work? Also, shouldn't change DB here
+        # in the validate method!
+        if self.context['request'].method == 'POST':
+            username = data['basic_profile']['user'].get('username', None)
+            basic_profile = models.BasicProfile.objects.filter(
+                user__username=username).first()
+            if not basic_profile:
+                kwargs = {'email': data['basic_profile']['user'].get('email', None),
+                    'groups': ['ARTIST']}
+                p = models.BasicProfile.create_user(username, **kwargs)
+                data['basic_profile'] = p
+            else:
+                data['basic_profile'] = basic_profile
 
         # if method is a PATCH, we don't want to arbitrarily set fields to None
         # if they were left out of the request data, since a PATCH request
@@ -226,6 +231,57 @@ class ShowSerializer(serializers.ModelSerializer):
     # venue = VenueShortSerializer()
     class Meta:
         model = models.Show
+        fields = ('start', 'end', 'latitude', 'longitude', 'venue_name')
+
+
+    def validate(self, data):
+        if self.context['request'].method == 'PATCH':
+            # TODO: support PATCH
+            pass
+        else:
+            data['start'] = data.get('start', None)
+            data['end'] = data.get('end', None)
+            data['latitude'] = data.get('latitude', None)
+            data['longitude'] = data.get('longitude', None)
+            data['venue_name'] = data.get('venue_name', None)
+            return data
+
+    def create(self, validated_data):
+        username = self.context['request'].user.username
+        user_profile = services.get_profile(username)
+        try:
+            artist = services.get_artist_by_id(self.context['artist_pk'])
+            if artist is None:
+              raise errors.InvalidInput('Invalid artist selection')
+            if artist.basic_profile.user.username != username and user_profile.highest_role() != 'ADMIN':
+                raise errors.PermissionDenied('Cannot create a show for a different artist')
+
+            show = models.Show(
+                artist=artist,
+                start=validated_data['start'],
+                end=validated_data['end'],
+                latitude=validated_data['latitude'],
+                longitude=validated_data['longitude'],
+                venue_name=validated_data['venue_name'])
+            show.save()
+            return show
+        except Exception:
+            raise errors.InvalidInput('Unknown error')
+
+    def update(self, instance, validated_data):
+        username = self.context['request'].user.username
+        user_profile = services.get_profile(username)
+        if self.context['request'].method == 'PATCH':
+            # TODO: support PATCH
+            pass
+        else:
+            instance.start = validated_data['start']
+            instance.end = validated_data['end']
+            instance.venue_name = validated_data['venue_name']
+            instance.longitude = validated_data['longitude']
+            instance.latitude = validated_data['latitude']
+            instance.save()
+            return instance
 
 
 class MessageSerializer(serializers.ModelSerializer):

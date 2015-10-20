@@ -12,9 +12,11 @@ Backend RESTful API for FanMobi
     `~/python_envs/fanmobi`. Now create a new environment there:
     `python3.4 -m venv ENV` (where `ENV` is the path you used above)
 3. Active the new environment: `source ENV/bin/activate`
-4. Install the necessary dependencies into this python environment:
+4. Set Python 3.4 as default 'alias python='~/py3env/bin/python3.4'' 
+5. Install Python development headers 'sudo apt-get install python3-dev'
+6. Install the necessary dependencies into this python environment:
     `pip install -r requirements.txt`
-5. Run the server: `./restart_clean_dev_server.sh`
+7. Run the server: `./restart_clean_dev_server.sh`
 
 Swagger documentation for the api is available at `http://localhost:8000/docs/`
 Use username `user` password `password` when prompted for authentication info

@@ -32,3 +32,5 @@ python manage.py test
 echo 'Loading sample data...'
 python manage.py runscript sample_data_generator
 python manage.py runserver 8001
+# for a production system, do something more like this:
+# gunicorn --workers=2 ozp.wsgi -b localhost:8000 --access-logfile logs.txt --error-logfile logs.txt

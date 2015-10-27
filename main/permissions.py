@@ -10,6 +10,16 @@ import main.services as services
 
 SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
 
+class Anyone(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated():
+            return False
+        user_profile = services.get_profile(request.user.username)
+        if user_profile:
+            return True
+        else:
+            return False
+
 class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated():

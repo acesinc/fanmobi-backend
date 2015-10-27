@@ -10,7 +10,7 @@ from rest_framework_nested import routers
 import main.views as views
 
 # Routers provide an easy way of automatically determining the URL conf.
-router = routers.SimpleRouter()
+router = routers.DefaultRouter()
 
 router.register(r'genre', views.GenreViewSet)
 router.register(r'profile', views.BasicProfileViewSet, base_name='profile')
@@ -22,14 +22,21 @@ router.register(r'artist', views.ArtistViewSet)
 # router.register(r'message', views.MessageViewSet)
 
 # nested routes
-nested_router = routers.NestedSimpleRouter(router, r'artist',
+artist_nested_router = routers.NestedSimpleRouter(router, r'artist',
     lookup='artist')
-nested_router.register(r'show', views.ShowViewSet,
+artist_nested_router.register(r'show', views.ShowViewSet,
     base_name='show')
+artist_nested_router.register(r'message', views.MessageViewSet,
+    base_name='message')
+
+profile_nested_router = routers.NestedSimpleRouter(router, r'profile',
+    lookup='profile')
+profile_nested_router.register(r'message', views.FanMessageViewSet,
+    base_name='message')
 
 # Wire up our API using automatic URL routing.
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'^', include(nested_router.urls)),
-    url(r'message/dismiss/(?P<pk>[0-9]+)/$', views.DismissMessageView.as_view())
+    url(r'^', include(artist_nested_router.urls)),
+    url(r'^', include(profile_nested_router.urls))
 ]

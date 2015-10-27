@@ -21,7 +21,7 @@ logger = logging.getLogger('fanmobi')
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_genres()
     serializer_class = serializers.GenreSerializer
-    permission_classes = (permissions.IsFan,)
+    # permission_classes = (permissions.IsFan,)
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -32,11 +32,11 @@ class GroupViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_users()
     serializer_class = serializers.UserSerializer
-    permission_classes = (permissions.IsFan,)
+    # permission_classes = (permissions.IsFan,)
 
 
 class BasicProfileViewSet(viewsets.ModelViewSet):
-    permission_classes = (permissions.IsFan,)
+    # permission_classes = (permissions.IsFan,)
     serializer_class = serializers.BasicProfileSerializer
 
     def get_queryset(self):
@@ -172,32 +172,106 @@ class ShowViewSet(viewsets.ModelViewSet):
         try:
             services.delete_show(request.user.username, show)
         except errors.PermissionDenied:
-            return Response('Cannot update another user\'s review',
+            return Response('Cannot update another artist\'s show',
                 status=status.HTTP_403_FORBIDDEN)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
 class MessageViewSet(viewsets.ModelViewSet):
-    queryset = services.get_all_messages()
-    permission_classes = (permissions.IsFan,)
-    serializer_class = serializers.MessageSerializer
-
-
-# TODO: PUT or DELETE? what url?
-class DismissMessageView(generics.DestroyAPIView):
-    queryset = services.get_all_messages()
-    permission_classes = (permissions.IsFan,)
+    permission_classes = (permissions.IsArtistOrReadOnly,)
     serializer_class = serializers.MessageSerializer
 
     def get_queryset(self):
         return services.get_all_messages()
 
-    def destroy(self, request, pk=None):
+    def list(self, request, artist_pk=None):
+        queryset = self.get_queryset().filter(artist__id=artist_pk)
+        # because we override the queryset here, we must
+        # manually invoke the pagination methods
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.MessageSerializer(page,
+                context={'request': request}, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = serializers.MessageSerializer(queryset, many=True,
+            context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, artist_pk=None):
         try:
-            instance = self.get_queryset().get(pk=pk)
-            basic_profile = services.get_profile(request.user.username)
-            instance.dismissed_by.add(basic_profile)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            queryset = self.get_queryset().get(pk=pk, artist__id=artist_pk)
+            serializer = serializers.MessageSerializer(queryset,
+                context={'request': request})
+            return Response(serializer.data)
+        except models.Message.DoesNotExist:
+            return Response('Message not found',
+                    status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request, artist_pk=None):
+        """
+        Create a new message
+        """
+        try:
+            serializer = serializers.MessageSerializer(data=request.data,
+                context={'request': request, 'artist_pk': artist_pk})
+            if not serializer.is_valid():
+                logger.error('%s' % serializer.errors)
+                return Response(serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except errors.PermissionDenied:
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
-            raise e
+          raise e
+
+    def destroy(self, request, pk=None, artist_pk=None):
+        queryset = self.get_queryset()
+        message = get_object_or_404(queryset, pk=pk)
+        try:
+            services.delete_message(request.user.username, message)
+        except errors.PermissionDenied:
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class FanMessageViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.Anyone,)
+    serializer_class = serializers.MessageSerializer
+
+    def get_queryset(self):
+        return services.get_all_messages()
+
+    def list(self, request, profile_pk=None):
+        basic_profile = models.BasicProfile.objects.get(id=profile_pk)
+        queryset = services.get_all_unread_messages(basic_profile.user.username)
+        # because we override the queryset here, we must
+        # manually invoke the pagination methods
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializers.MessageSerializer(page,
+                context={'request': request}, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = serializers.MessageSerializer(queryset, many=True,
+            context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, profile_pk=None):
+        return Response('Not implemented', status=status.HTTP_400_BAD_REQUEST)
+
+    def create(self, request, profile_pk=None):
+        return Response('Not implemented', status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None, profile_pk=None):
+        queryset = self.get_queryset()
+        basic_profile = models.BasicProfile.objects.get(id=profile_pk)
+        message = get_object_or_404(queryset, pk=pk)
+        try:
+            services.mark_message_as_read(basic_profile.user.username, message)
+        except errors.PermissionDenied:
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_204_NO_CONTENT)

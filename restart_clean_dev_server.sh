@@ -33,4 +33,4 @@ echo 'Loading sample data...'
 python manage.py runscript sample_data_generator
 python manage.py runserver 8001
 # for a production system, do something more like this:
-# gunicorn --workers=2 main.wsgi -b localhost:8000 --access-logfile logs.txt --error-logfile logs.txt
+# gunicorn --workers=2 fanmobi.wsgi -b localhost:8000 --access-logfile logs.txt --error-logfile logs.txt

@@ -285,6 +285,41 @@ class ShowSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    artist = ArtistProfileShortSerializer()
+    """
+    """
+    artist = ArtistProfileShortSerializer(required=False, read_only=True)
     class Meta:
         model = models.Message
+        fields = ('text', 'created_at', 'attachment', 'id', 'artist')
+        read_only_fields = ('created_at', 'id', 'artist')
+
+
+    def validate(self, data):
+        if self.context['request'].method == 'PATCH':
+            # TODO: support PATCH
+            pass
+        else:
+            data['text'] = data.get('text', None)
+            data['attachment'] = data.get('attachment', None)
+            return data
+
+    def create(self, validated_data):
+        username = self.context['request'].user.username
+        user_profile = services.get_profile(username)
+        try:
+            artist = services.get_artist_by_id(self.context['artist_pk'])
+            if artist is None:
+              raise errors.InvalidInput('Invalid artist selection')
+            if artist.basic_profile.user.username != username and user_profile.highest_role() != 'ADMIN':
+                raise errors.PermissionDenied('Cannot create a message for a different artist')
+
+            message = models.Message(
+                artist=artist,
+                text=validated_data['text'],
+                attachment=validated_data['attachment'])
+            message.save()
+            return message
+        except Exception:
+            raise errors.InvalidInput('Unknown error')
+
+    # don't support updating of a message

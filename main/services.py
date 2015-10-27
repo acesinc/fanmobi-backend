@@ -54,8 +54,32 @@ def get_all_shows():
 def get_all_messages():
     return models.Message.objects.all()
 
+def get_all_unread_messages(username):
+    profile = get_profile(username)
+    # get all artists connected to this user
+    artists = models.ArtistProfile.objects.filter(connected_users__in=[profile.id])
+    # get all messages from these artists
+    artist_ids = [a.id for a in artists]
+    messages = models.Message.objects.filter(artist__id__in=artist_ids)
+    # and remvove the messages that have been dismissed
+    dismissed_messages = messages.filter(dismissed_by__in=[profile.id])
+    unread_messages = [i for i in messages if i not in dismissed_messages]
+    return unread_messages
+
+def mark_message_as_read(username, message):
+    profile = get_profile(username)
+    message.dismissed_by.add(profile)
+    return
+
+
 def delete_show(username, show):
     profile = get_profile(username)
     if username != show.artist.basic_profile.user.username and profile.highest_role() not in ['ADMIN']:
         raise errors.PermissionDenied('Cannot delete a show for another artist')
     show.delete()
+
+def delete_message(username, message):
+    profile = get_profile(username)
+    if username != message.artist.basic_profile.user.username and profile.highest_role() not in ['ADMIN']:
+        raise errors.PermissionDenied('Cannot delete a message for another artist')
+    message.delete()

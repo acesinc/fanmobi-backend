@@ -28,5 +28,8 @@ urlpatterns = [
 
 # in debug, serve the media and static resources with the django web server
 # https://docs.djangoproject.com/en/1.8/howto/static-files/#serving-static-files-during-development
+
+# TODO: it seems as though gunicorn will serve this as well if it's present,
+# which is not good
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

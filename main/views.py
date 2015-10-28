@@ -103,7 +103,7 @@ class ArtistViewSet(viewsets.ModelViewSet):
 
     def update(self, request, pk=None):
         """
-        Create a new artist
+        Update an artist
         """
         try:
             logger.debug('inside ArtistViewSet.update, data: %s' % request.data)
@@ -138,6 +138,9 @@ class ShowViewSet(viewsets.ModelViewSet):
         return services.get_all_shows()
 
     def list(self, request, artist_pk=None):
+        """
+        List all shows for an artist
+        """
         queryset = self.get_queryset().filter(artist__id=artist_pk)
         # because we override the queryset here, we must
         # manually invoke the pagination methods
@@ -151,6 +154,9 @@ class ShowViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None, artist_pk=None):
+        """
+        Get a show for an artist
+        """
         queryset = self.get_queryset().get(pk=pk, artist__id=artist_pk)
         serializer = serializers.ShowSerializer(queryset,
             context={'request': request})
@@ -158,7 +164,7 @@ class ShowViewSet(viewsets.ModelViewSet):
 
     def create(self, request, artist_pk=None):
         """
-        Create a new show
+        Create a new show for an artist
         """
         try:
             serializer = serializers.ShowSerializer(data=request.data,
@@ -178,7 +184,7 @@ class ShowViewSet(viewsets.ModelViewSet):
 
     def update(self, request, pk=None, artist_pk=None):
         """
-        Update an existing show
+        Update an existing show for an artist
         """
         try:
             instance = self.get_queryset().get(pk=pk, artist__id=artist_pk)
@@ -198,6 +204,9 @@ class ShowViewSet(viewsets.ModelViewSet):
           raise e
 
     def destroy(self, request, pk=None, artist_pk=None):
+        """
+        Delete a show for an artist
+        """
         queryset = self.get_queryset()
         show = get_object_or_404(queryset, pk=pk)
         try:
@@ -216,6 +225,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         return services.get_all_messages()
 
     def list(self, request, artist_pk=None):
+        """
+        List all messages from an artist
+        """
         queryset = self.get_queryset().filter(artist__id=artist_pk)
         # because we override the queryset here, we must
         # manually invoke the pagination methods
@@ -229,6 +241,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None, artist_pk=None):
+        """
+        Get a message from an artist
+        """
         try:
             queryset = self.get_queryset().get(pk=pk, artist__id=artist_pk)
             serializer = serializers.MessageSerializer(queryset,
@@ -240,7 +255,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def create(self, request, artist_pk=None):
         """
-        Create a new message
+        Create a new message for an artist
         """
         try:
             serializer = serializers.MessageSerializer(data=request.data,
@@ -259,6 +274,9 @@ class MessageViewSet(viewsets.ModelViewSet):
           raise e
 
     def destroy(self, request, pk=None, artist_pk=None):
+        """
+        Delete a message from an artist
+        """
         queryset = self.get_queryset()
         message = get_object_or_404(queryset, pk=pk)
         try:
@@ -277,6 +295,9 @@ class FanMessageViewSet(ListDestroyModelViewSet):
         return services.get_all_messages()
 
     def list(self, request, profile_pk=None):
+        """
+        Get all unread messages for a user
+        """
         basic_profile = models.BasicProfile.objects.get(id=profile_pk)
         queryset = services.get_all_unread_messages(basic_profile.user.username)
         # because we override the queryset here, we must
@@ -291,6 +312,9 @@ class FanMessageViewSet(ListDestroyModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, pk=None, profile_pk=None):
+        """
+        Mark a message as read for a user
+        """
         queryset = self.get_queryset()
         basic_profile = models.BasicProfile.objects.get(id=profile_pk)
         message = get_object_or_404(queryset, pk=pk)
@@ -306,6 +330,9 @@ class ArtistConnectionViewSet(ListModelViewSet):
     serializer_class = serializers.BasicProfileShortSerializer
 
     def list(self, request, artist_pk=None):
+        """
+        Get all users connected to an artist
+        """
         artist = models.ArtistProfile.objects.get(id=artist_pk)
         queryset = models.ArtistProfile.objects.get(id=artist_pk).connected_users
         # because we override the queryset here, we must
@@ -324,6 +351,9 @@ class FanConnectionViewSet(ListUpdateDestroyModelViewSet):
     serializer_class = serializers.ArtistProfileShortSerializer
 
     def list(self, request, profile_pk=None):
+        """
+        Get all artists followed by a user
+        """
         queryset = models.ArtistProfile.objects.filter(connected_users__in=[profile_pk])
         # because we override the queryset here, we must
         # manually invoke the pagination methods
@@ -337,6 +367,9 @@ class FanConnectionViewSet(ListUpdateDestroyModelViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, pk=None, profile_pk=None):
+        """
+        Unfollow an artist
+        """
         try:
             artist = models.ArtistProfile.objects.get(id=pk)
             updated_connected_users = []

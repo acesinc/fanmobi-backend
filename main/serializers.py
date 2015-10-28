@@ -68,11 +68,15 @@ class BasicProfileShortSerializer(serializers.ModelSerializer):
 
 class ArtistProfileSerializer(serializers.ModelSerializer):
     basic_profile = BasicProfileShortSerializer()
-    connected_users = BasicProfileShortSerializer(many=True, required=False)
     genres = GenreSerializer(required=False, many=True)
 
     class Meta:
         model = models.ArtistProfile
+        fields = ('id', 'basic_profile', 'genres', 'name', 'hometown', 'bio',
+            'avatar_url_thumb', 'avatar_url', 'website', 'facebook_id',
+            'twitter_id', 'soundcloud_id', 'youtube_id', 'itunes_url',
+            'ticket_url', 'merch_url', 'paypal_email', 'next_show')
+        read_only_fields = ('id')
 
 
     def validate(self, data):
@@ -213,6 +217,7 @@ class ArtistProfileShortSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ArtistProfile
         fields = ('name', 'id')
+        read_only_fields = ('name', 'id')
 
 
 # class VenueSerializer(serializers.ModelSerializer):

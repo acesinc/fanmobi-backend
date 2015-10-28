@@ -36,7 +36,7 @@ profile_nested_router = routers.NestedSimpleRouter(router, r'profile',
     lookup='profile')
 profile_nested_router.register(r'message', views.FanMessageViewSet,
     base_name='message')
-profile_nested_router.register(r'following', views.FanConnectionViewSet,
+profile_nested_router.register(r'connected', views.FanConnectionViewSet,
     base_name='connected')
 
 # Wire up our API using automatic URL routing.

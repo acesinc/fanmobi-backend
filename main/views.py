@@ -3,18 +3,25 @@ Views
 """
 import logging
 
+import requests
+
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
+from rest_framework.decorators import permission_classes
 from rest_framework import generics
+from rest_framework import permissions as rf_permissions
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework import mixins as mixins
 from rest_framework.response import Response
 
+import main.constants as constants
 import main.permissions as permissions
 import main.serializers as serializers
 import main.models as models
 import main.services as services
 import main.errors as errors
+import main.utils as utils
 
 # Get an instance of a logger
 logger = logging.getLogger('fanmobi')
@@ -403,3 +410,84 @@ class FanConnectionViewSet(ListUpdateDestroyModelViewSet):
         except Exception as e:
           raise e
 
+@api_view(['POST'])
+@permission_classes((rf_permissions.AllowAny,))
+def LoginView(request):
+    """
+    User login via Facebook or an 'anonymous' id
+
+    If both are provided, the fb_access_token takes precedence. The artist
+    query parameter is a boolean (either 0/1 or true/false). anonymous_id must
+    be a positive integer, 30 digits or less
+    ---
+    omit_serializer: true
+    parameters_strategy:
+        form: replace
+    parameters:
+        - name: fb_access_token
+          type: string
+        - name: anonymous_id
+          type: string
+        - name: artist
+          paramType: query
+    """
+    if 'username' in request.session:
+        # already logged in
+        r_data = {'username': request.session['username'],
+            'message': 'already logged in as user: %s' % request.session['username']}
+        return Response(r_data,
+            status=status.HTTP_200_OK)
+    user_profile = None
+    username = None
+    friendly_name = None
+    is_artist = utils.str_to_bool(request.query_params.get('artist', False))
+    fb_access_token = request.data.get('fb_access_token', None)
+    anonymous_id = request.data.get('anonymous_id', None)
+    if fb_access_token:
+        logger.debug('attempting to hit facebook with access_token: %s' % fb_access_token)
+        fb_url = '%s/?access_token=%s' % (constants.FACEBOOK_ME_ENDPOINT, fb_access_token)
+        r = requests.get(fb_url)
+        if r.status_code != 200:
+            logger.error('Error hitting facebook API')
+            return Response('Problem connecting to facebook: %s' % r.text, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        resp = r.json()
+        username = resp['id']
+        friendly_name = resp['name']
+        logger.debug('Got facebook user with id %s and name %s' % (username, friendly_name))
+    elif anonymous_id:
+        logger.debug('logging user in with anonymous_id: %s' % anonymous_id)
+        username = anonymous_id
+        friendly_name = username
+    else:
+        return Response('Error: no facebook or anonymous id provided',
+            status=HTTP_400_BAD_REQUEST)
+
+    user_profile = services.get_profile(username)
+    if not user_profile:
+        # if user doesn't exist, create them
+        kwargs = {}
+        if is_artist:
+            kwargs['groups'] = ['FAN', 'ARTIST']
+        else:
+            kwargs['groups'] = ['FAN']
+
+        kwargs['name'] = friendly_name
+        p = models.BasicProfile.create_user(username, **kwargs)
+        if is_artist:
+            a = models.ArtistProfile(basic_profile=p, name=friendly_name)
+            a.save()
+        user_profile = p
+        logger.info('created user %s - is_artist: %s' % (user_profile.user.username, is_artist))
+    request.session['username'] = user_profile.user.username
+    r_data = {'username': username, 'name': friendly_name}
+    if fb_access_token:
+        request.session['fb_access_token'] = fb_access_token
+
+
+    return Response(r_data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes((rf_permissions.AllowAny,))
+def LogoutView(request):
+    request.session.flush()
+    return Response('logged out', status=status.HTTP_200_OK)

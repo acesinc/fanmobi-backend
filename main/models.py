@@ -37,7 +37,7 @@ class Genre(models.Model):
 
 class ArtistProfile(models.Model):
     basic_profile = models.ForeignKey('BasicProfile', related_name='artists')
-    name = models.CharField(max_length=256, unique=True)
+    name = models.CharField(max_length=256)
     hometown = models.CharField(max_length=256, blank=True, null=True)
     bio = models.CharField(max_length=8192, blank=True, null=True)
     avatar_url_thumb = models.URLField(max_length=2048, blank=True, null=True)
@@ -174,6 +174,11 @@ class BasicProfile(models.Model):
         # create the fan object and associate it with the User
         f = BasicProfile(user=user)
         f.save()
+
+        # if 'ARTIST' in groups:
+        #     # if the name is blank, just use their username (facebook id) for now
+        #     a = ArtistProfile(basic_profile=f, name=kwargs.get('name', username))
+        #     a.save()
 
         return f
 

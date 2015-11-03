@@ -43,5 +43,7 @@ profile_nested_router.register(r'connected', views.FanConnectionViewSet,
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^', include(artist_nested_router.urls)),
-    url(r'^', include(profile_nested_router.urls))
+    url(r'^', include(profile_nested_router.urls)),
+    url(r'^login/$', views.LoginView),
+    url(r'^logout/$', views.LogoutView),
 ]

@@ -59,23 +59,25 @@ class ListUpdateDestroyModelViewSet(mixins.ListModelMixin,
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_genres()
     serializer_class = serializers.GenreSerializer
-    # permission_classes = (permissions.IsFan,)
+    permission_classes = (permissions.Anyone,)
 
 
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_groups()
     serializer_class = serializers.GroupSerializer
+    permission_classes = (permissions.Anyone,)
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_users()
     serializer_class = serializers.UserSerializer
-    # permission_classes = (permissions.IsFan,)
+    permission_classes = (permissions.Anyone,)
 
 
 class BasicProfileViewSet(viewsets.ModelViewSet):
     # permission_classes = (permissions.IsFan,)
     serializer_class = serializers.BasicProfileSerializer
+    permission_classes = (permissions.Anyone,)
 
     def get_queryset(self):
         queryset = services.get_all_profiles()
@@ -418,7 +420,7 @@ def LoginView(request):
 
     If both are provided, the fb_access_token takes precedence. The artist
     query parameter is a boolean (either 0/1 or true/false). anonymous_id must
-    be a positive integer, 30 digits or less
+    be a positive integer, 30 digits or less.
     ---
     omit_serializer: true
     parameters_strategy:

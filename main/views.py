@@ -59,25 +59,25 @@ class ListUpdateDestroyModelViewSet(mixins.ListModelMixin,
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_genres()
     serializer_class = serializers.GenreSerializer
-    permission_classes = (permissions.Anyone,)
+    permission_classes = (permissions.IsAuthenticated,)
 
 
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_groups()
     serializer_class = serializers.GroupSerializer
-    permission_classes = (permissions.Anyone,)
+    permission_classes = (permissions.IsAuthenticated,)
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_users()
     serializer_class = serializers.UserSerializer
-    permission_classes = (permissions.Anyone,)
+    permission_classes = (permissions.IsAuthenticated,)
 
 
 class BasicProfileViewSet(viewsets.ModelViewSet):
     # permission_classes = (permissions.IsFan,)
     serializer_class = serializers.BasicProfileSerializer
-    permission_classes = (permissions.Anyone,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         queryset = services.get_all_profiles()
@@ -297,7 +297,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
 
 class FanMessageViewSet(ListDestroyModelViewSet):
-    permission_classes = (permissions.Anyone,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = serializers.MessageSerializer
 
     def get_queryset(self):
@@ -335,7 +335,7 @@ class FanMessageViewSet(ListDestroyModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ArtistConnectionViewSet(ListModelViewSet):
-    permission_classes = (permissions.Anyone,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = serializers.BasicProfileShortSerializer
 
     def list(self, request, artist_pk=None):
@@ -356,7 +356,7 @@ class ArtistConnectionViewSet(ListModelViewSet):
         return Response(serializer.data)
 
 class FanConnectionViewSet(ListUpdateDestroyModelViewSet):
-    permission_classes = (permissions.Anyone,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = serializers.ArtistProfileShortSerializer
 
     def list(self, request, profile_pk=None):

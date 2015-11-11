@@ -89,10 +89,8 @@ class BasicProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True,
         blank=True)
 
-    current_latitude = models.DecimalField(max_digits=8, decimal_places=3,
-        blank=True, null=True)
-    current_longitude = models.DecimalField(max_digits=8, decimal_places=3,
-        blank=True, null=True)
+    current_latitude = models.CharField(max_length=16, blank=True, null=True)
+    current_longitude = models.CharField(max_length=16, blank=True, null=True)
 
     def __repr__(self):
         return 'Profile: %s' % self.user.username
@@ -238,8 +236,8 @@ class Show(models.Model):
     end = models.DateTimeField()
     artist = models.ForeignKey(ArtistProfile, related_name='shows')
     # venue = models.ForeignKey(Venue, related_name='shows')
-    latitude = models.DecimalField(max_digits=8, decimal_places=3)
-    longitude = models.DecimalField(max_digits=8, decimal_places=3)
+    latitude = models.CharField(max_length=16, null=True, blank=True)
+    longitude = models.CharField(max_length=16, null=True, blank=True)
     venue_name = models.CharField(max_length=1024, blank=True, null=True)
 
     def __repr__(self):

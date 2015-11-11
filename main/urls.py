@@ -42,8 +42,9 @@ profile_nested_router.register(r'connected', views.FanConnectionViewSet,
 # Wire up our API using automatic URL routing.
 urlpatterns = [
     url(r'^', include(router.urls)),
+    url(r'^artists-in-radius/$', views.ArtistInRadiusView),
     url(r'^', include(artist_nested_router.urls)),
     url(r'^', include(profile_nested_router.urls)),
     url(r'^login/$', views.LoginView),
-    url(r'^logout/$', views.LogoutView),
+    url(r'^logout/$', views.LogoutView)
 ]

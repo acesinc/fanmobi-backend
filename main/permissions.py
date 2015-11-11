@@ -4,11 +4,15 @@ Custom permissions
 Can do things like if view.action == 'create'
 
 """
+import logging
+
 from rest_framework import permissions
 import main.models as models
 import main.services as services
 
 SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
+
+logger = logging.getLogger('fanmobi')
 
 class IsAuthenticated(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -39,6 +43,8 @@ class IsArtistOrReadOnly(permissions.BasePermission):
         if (request.method in SAFE_METHODS or \
             user_profile.highest_role() in ['ADMIN', 'ARTIST']):
             return True
+
+        logger.debug('user %s is not an artist' % request.user.username)
         return False
 
 class IsFan(permissions.BasePermission):

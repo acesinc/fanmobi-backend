@@ -38,6 +38,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = django.contrib.auth.models.User
         fields = ('username', 'email', 'groups')
 
+        extra_kwargs = {
+            'username': {'validators': []}
+        }
+
 
 class UserShortSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,7 +57,7 @@ class UserShortSerializer(serializers.ModelSerializer):
 
 
 class BasicProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = UserSerializer(required=False)
     class Meta:
         model = models.BasicProfile
 

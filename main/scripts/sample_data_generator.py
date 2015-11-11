@@ -83,7 +83,7 @@ def run():
         datetime.datetime(2015, 9, 18, hour=20, minute=0))
     end = start + datetime.timedelta(hours=3)
     counting_crows_show_1 = models.Show(start=start, end=end,
-        artist=counting_crows_artist, latitude=38.918229, longitude=-77.023795,
+        artist=counting_crows_artist, latitude='38.918229', longitude='-77.023795',
         venue_name='9:30 Club')
     counting_crows_show_1.save()
 

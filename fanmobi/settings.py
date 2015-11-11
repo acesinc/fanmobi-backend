@@ -143,7 +143,8 @@ MEDIA_URL='media/'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'main.auth.FanmobiAuthentication'
+        'main.auth.FanmobiAuthentication',
+        'rest_framework.authentication.BasicAuthentication'
         # 'rest_framework.authentication.SessionAuthentication',
     , ),
     # Use Django's standard `django.contrib.auth` permissions,

@@ -2,6 +2,7 @@
 Views
 """
 import logging
+import math
 
 import requests
 
@@ -493,3 +494,46 @@ def LoginView(request):
 def LogoutView(request):
     request.session.flush()
     return Response('logged out', status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def ArtistInRadiusView(request):
+    """
+    Get artists within radius of lat, long coordinates
+    ---
+    omit_serializer: true
+    parameters_strategy:
+        form: replace
+    parameters:
+        - name: radius
+          paramType: query
+        - name: latitude
+          paramType: query
+        - name: longitude
+          paramType: query
+    """
+    try:
+        radius = request.query_params.get('radius')
+        user_lat = request.query_params.get('latitude')
+        user_lon = request.query_params.get('longitude')
+    except Exception as e:
+        return Response('Bad request: %s' % str(e), status=status.HTTP_400_BAD_REQUEST)
+    logger.debug('looking for artists in a %s km radius of lat: %s, long: %s' % (radius, user_lat, user_lon))
+    # In general, x and y must satisfy (x - center_x)^2 + (y - center_y)^2 < radius^2
+    artists = services.get_all_artists()
+    artists_in_radius = []
+    for a in artists:
+        if not a.basic_profile.current_latitude or not a.basic_profile.current_longitude:
+            continue
+        artist_lat = a.basic_profile.current_latitude
+        artist_lon = a.basic_profile.current_longitude
+        logger.debug('checking if artist %s is within range' % a.basic_profile.user.username)
+        logger.debug('artist lat: %s, artist lon: %s' % (artist_lat, artist_lon))
+        logger.debug('user lat: %s, user lon: %s' % (user_lat, user_lon))
+        if utils.is_inside_radius(user_lat, user_lon, artist_lat, artist_lon, radius):
+            artists_in_radius.append(a)
+    serializer = serializers.ArtistProfileSerializer(artists_in_radius, many=True,
+        context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+

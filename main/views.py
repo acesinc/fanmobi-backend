@@ -207,6 +207,11 @@ class ArtistViewSet(viewsets.ModelViewSet):
 
 
 class ShowViewSet(viewsets.ModelViewSet):
+    """
+    Shows for artists
+
+    Times are in format: `2015-09-19T00:00:00Z` (YYYY-MM-DDTHH:MM:SSZ)
+    """
     permission_classes = (permissions.IsArtistOrReadOnly,)
     serializer_class = serializers.ShowSerializer
 
@@ -217,6 +222,8 @@ class ShowViewSet(viewsets.ModelViewSet):
         """
         List all shows for an artist
         """
+        if not services.get_artist_by_id(artist_pk):
+            return Response('Artist not found', status=status.HTTP_404_NOT_FOUND)
         queryset = self.get_queryset().filter(artist__id=artist_pk)
         # because we override the queryset here, we must
         # manually invoke the pagination methods
@@ -242,6 +249,9 @@ class ShowViewSet(viewsets.ModelViewSet):
         """
         Create a new show for an artist
         """
+        if not services.can_access(request.user.username, artist_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         try:
             serializer = serializers.ShowSerializer(data=request.data,
                 context={'request': request, 'artist_pk': artist_pk})
@@ -262,6 +272,9 @@ class ShowViewSet(viewsets.ModelViewSet):
         """
         Update an existing show for an artist
         """
+        if not services.can_access(request.user.username, artist_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         try:
             instance = self.get_queryset().get(pk=pk, artist__id=artist_pk)
             serializer = serializers.ShowSerializer(instance, data=request.data,
@@ -283,6 +296,9 @@ class ShowViewSet(viewsets.ModelViewSet):
         """
         Delete a show for an artist
         """
+        if not services.can_access(request.user.username, artist_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         queryset = self.get_queryset()
         show = get_object_or_404(queryset, pk=pk)
         try:
@@ -304,6 +320,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         """
         List all messages from an artist
         """
+        if not services.can_access(request.user.username, artist_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         queryset = self.get_queryset().filter(artist__id=artist_pk)
         # because we override the queryset here, we must
         # manually invoke the pagination methods
@@ -333,6 +352,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         """
         Create a new message for an artist
         """
+        if not services.can_access(request.user.username, artist_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         try:
             serializer = serializers.MessageSerializer(data=request.data,
                 context={'request': request, 'artist_pk': artist_pk})
@@ -353,6 +375,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         """
         Delete a message from an artist
         """
+        if not services.can_access(request.user.username, artist_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         queryset = self.get_queryset()
         message = get_object_or_404(queryset, pk=pk)
         try:
@@ -417,6 +442,9 @@ class ArtistConnectionViewSet(ListModelViewSet):
         """
         Get all users connected to an artist
         """
+        if not services.can_access(request.user.username, artist_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         artist = models.ArtistProfile.objects.get(id=artist_pk)
         queryset = models.ArtistProfile.objects.get(id=artist_pk).connected_users
         # because we override the queryset here, we must

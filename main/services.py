@@ -48,6 +48,10 @@ def can_access(current_username, requested_profile_id):
         current_username: username currently logged in
         requested_profile_id: id of models.Profile to access
     """
+    try:
+        requested_profile_id = int(requested_profile_id)
+    except ValueError:
+        return False
     if is_admin(current_username):
         return True
     profile = get_profile_by_id(requested_profile_id)

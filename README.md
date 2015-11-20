@@ -96,7 +96,16 @@ Method | Endpoint | Usage
 ------ | -------- | -----
 GET  | `/api/artist/` | returns all Artist profiles (open to any authenticated user)
 GET  | `/api/artist/<id>/` | return information for a single artist
-PUT  | `/api/artist/<id>/` | update artist information
+PUT  | `/api/artist/<id>/` | update artist information (does not work from Swagger)
+GET  | `/api/artist/<id>/show/` | get all shows for an artist
+POST  | `/api/artist/<id>/show/` | create a new show
+PUT  | `/api/artist/<id>/show/<show_id>/` | update an existing show
+DELETE  | `/api/artist/<id>/show/<show_id>/` | delete an existing show
+GET  | `/api/artist/<id>/connected/` | get all users connected to this artist
+GET  | `/api/artist/<id>/message/` | get all messages from this artist
+POST  | `/api/artist/<id>/message/` | create a message from this artist
+DELETE  | `/api/artist/<id>/message/<message_id>/` | delete this message
+
 
 Like other users, artists are created when a new user tries to login (and specifies
 that they are an artist). The POST endpoint to create a new artist is not fully

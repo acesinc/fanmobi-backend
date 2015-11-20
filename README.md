@@ -35,8 +35,7 @@ General notes:
 All requests (other than these) must be authenticated. Session-based
 authentication is used to keep track of the current user
 
-Useful endpoints:
-
+####Useful endpoints
 Method | Endpoint | Description
 ------ | -------- | -----
 POST | `/api/login/` | login
@@ -60,8 +59,7 @@ them. **TBD:** Need to decide whether these genres are pre-populated and thus
 read-only by non-ADMINs, or if artists should be able to create their own
 genres
 
-Useful endpoints:
-
+#### Useful endpoints
 Method | Endpoint | Description
 ------ | -------- | -----
 GET | `/api/genre/` | Get all genres

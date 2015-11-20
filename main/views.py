@@ -58,34 +58,73 @@ class ListUpdateDestroyModelViewSet(mixins.ListModelMixin,
     pass
 
 class GenreViewSet(viewsets.ModelViewSet):
+    """
+    Names of music genres
+    """
     queryset = services.get_all_genres()
     serializer_class = serializers.GenreSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAdminOrReadOnly,)
 
 
 class GroupViewSet(viewsets.ModelViewSet):
+    """
+    A Group is a Role, like a Fan or an Artist
+
+    A user can belong to one or more groups. Currently, we are using three
+    groups: FAN, ARTIST, and ADMIN. These should be very static - don't
+    worry about changing anything here
+
+    Accessible only via ADMINs
+    """
     queryset = services.get_all_groups()
     serializer_class = serializers.GroupSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAdmin,)
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    User is a built-in Django thing - don't use this directly
+
+    Accessible only via ADMINs
+    """
     queryset = services.get_all_users()
     serializer_class = serializers.UserSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAdmin,)
 
 
 class BasicProfileViewSet(viewsets.ModelViewSet):
+    """
+    Every Fanmobi user has an associated Profile
+
+    At a minimum, a Profile has an associated user with a username and belongs
+    to at least one Group (FAN by default)
+
+    `current_latitude` and `current_longitude` are in Decimal Degrees
+    """
     # permission_classes = (permissions.IsFan,)
     serializer_class = serializers.BasicProfileSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.ProfilePermissions,)
 
     def get_queryset(self):
-        queryset = services.get_all_profiles()
-        role = self.request.query_params.get('role', None)
-        if role:
-            queryset = services.get_profiles_by_role(role)
-        return queryset
+        username = self.request.user.username
+        if services.is_admin(username):
+            role = self.request.query_params.get('role', None)
+            if role:
+                queryset = services.get_profiles_by_role(role)
+            else:
+                queryset = services.get_all_profiles()
+            return queryset
+        else:
+            # only get this users info
+            queryset = models.BasicProfile.objects.filter(
+                user__username=username)
+            return queryset
+
+    def list(self, request):
+        """
+        **Returns current users profile unless user is an ADMIN**
+        """
+        return super(BasicProfileViewSet, self).list(self, request)
 
 
 class ArtistViewSet(viewsets.ModelViewSet):

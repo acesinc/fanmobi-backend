@@ -20,3 +20,52 @@ Backend RESTful API for FanMobi
 
 Swagger documentation for the api is available at `http://localhost:8000/docs/`
 Use username `user` password `password` when prompted for authentication info
+
+## API Notes
+Most of the documentation for the API should be accessed via Swagger. Below are
+some high level descriptions of the various endpoints
+
+General notes:
+
+* PATCH endpoints are not implemented - don't try and use these
+* Unless a user is an ADMIN, they only have access to their own data
+
+### Login/Logout
+All requests (other than these) must be authenticated. Session-based
+authentication is used to keep track of the current user
+
+Permissions: open
+### User
+This is a lower-level thing used by default in Django - don't use this
+endpoint directly
+
+Permissions: ADMIN access only
+### Group
+A Group is a Role, and a user can belong to one or more groups. Currently, we
+are using three groups: FAN, ARTIST, and ADMIN. There shouldn't be a need to
+change anything here, but these three groups must be created in the database
+
+Permissions: ADMIN access only
+### Genre
+Names of music genres. Artists have zero or more music genres associated with
+them. **TBD:** Need to decide whether these genres are pre-populated and thus
+read-only by non-ADMINs, or if artists should be able to create their own
+genres
+
+Permissions: ADMIN has full access, authenticated users have read-only
+### Profile
+Every user of Fanmobi has a Profile. At a minimum, a Profile has an associated
+user with a username and belongs to at least one Group (FAN by default). Trying
+to access a user profile other than your own will result in a 404 (unless you
+are an ADMIN)
+
+Method | Endpoint | Usage
+------ | -------- | -----
+POST | /api/profile/ | don't use. Profiles are created automatically on login
+GET  | /api/profile/ | returns a list of one (the current user) unless user is
+an ADMIN, in which case all users are returned
+PUT  | /api/profile/ | update a user profile
+DELETE /api/profile/ - a user can currently delete their own profile, but there
+    is not currently a use case for this
+
+

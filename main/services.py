@@ -20,6 +20,16 @@ def get_profile(username):
     except models.BasicProfile.DoesNotExist:
         return None
 
+def is_admin(username):
+    try:
+        profile = get_profile(username)
+        groups = profile.user.groups.values_list('name', flat=True)
+        if 'ADMIN' in groups:
+            return True
+        return False
+    except Exception:
+        return False
+
 def get_all_genres():
     return models.Genre.objects.all()
 

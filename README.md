@@ -26,7 +26,6 @@ Most of the documentation for the API should be accessed via Swagger. Below are
 some high level descriptions of the various endpoints
 
 General notes:
-
 * PATCH endpoints are not implemented - don't try and use these
 * Unless a user is an ADMIN, they only have access to their own data
 

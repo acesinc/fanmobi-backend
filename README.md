@@ -35,6 +35,13 @@ General notes:
 All requests (other than these) must be authenticated. Session-based
 authentication is used to keep track of the current user
 
+Useful endpoints:
+
+Method | Endpoint | Description
+------ | -------- | -----
+POST | `/api/login/` | login
+POST | `/api/logout/` | logout
+
 Permissions: open
 ### User
 This is a lower-level thing used by default in Django - don't use this
@@ -53,6 +60,12 @@ them. **TBD:** Need to decide whether these genres are pre-populated and thus
 read-only by non-ADMINs, or if artists should be able to create their own
 genres
 
+Useful endpoints:
+
+Method | Endpoint | Description
+------ | -------- | -----
+GET | `/api/genre/` | Get all genres
+
 Permissions: ADMIN has full access, authenticated users have read-only
 ### Profile
 Every user of Fanmobi has a Profile. At a minimum, a Profile has an associated
@@ -60,6 +73,7 @@ user with a username and belongs to at least one Group (FAN by default). Trying
 to access a user profile other than your own will result in a 403 (unless you
 are an ADMIN). Once created, **usernames cannot currenty be changed**
 
+#### Useful Endpoints
 Method | Endpoint | Usage
 ------ | -------- | -----
 POST | `/api/profile/` | don't use. Profiles are created automatically on login
@@ -69,6 +83,10 @@ PUT  | `/api/profile/<id>/` | update a user's profile (currently only for updati
 DELETE | `/api/profile/<id>/` | delete a user's profile (no use case yet)
 GET | `/api/profile/<id>/message/` | returns all unread messages for a user
 DELETE | `/api/profile/<profile_id>/message/<message_id>/` | mark a message as read
+
+### Artist
+In addition to a Profile, artists have additional information associated
+with them
 
 
 

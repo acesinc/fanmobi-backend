@@ -613,7 +613,7 @@ def LogoutView(request):
 @permission_classes((permissions.IsAuthenticated,))
 def ArtistInRadiusView(request):
     """
-    Get artists within radius of lat, long coordinates
+    Get artists within a radius (km) of given coordinates (in decimal degrees )
     ---
     omit_serializer: true
     parameters_strategy:

@@ -62,13 +62,13 @@ are an ADMIN). Once created, **usernames cannot currenty be changed**
 
 Method | Endpoint | Usage
 ------ | -------- | -----
-POST | /api/profile/ | don't use. Profiles are created automatically on login
-GET  | /api/profile/ | returns a list of one (the current user) unless user is an ADMIN, in which case all users are returned
-GET  | /api/profile/<id> | returns a user's profile
-PUT  | /api/profile/<id> | update a user's profile (currently only for updating a user's location)
-DELETE | /api/profile/<id> | delete a user's profile (no use case yet)
-GET | /api/profile/<id>/message/ | returns all unread messages for a user
-DELETE | /api/profile/<profile_id>/message/<message_id>/ | mark a message as read
+POST | `/api/profile/` | don't use. Profiles are created automatically on login
+GET  | `/api/profile/` | returns a list of one (the current user) unless user is an ADMIN, in which case all users are returned
+GET  | `/api/profile/<id>/` | returns a user's profile
+PUT  | `/api/profile/<id>/` | update a user's profile (currently only for updating a user's location)
+DELETE | `/api/profile/<id>/` | delete a user's profile (no use case yet)
+GET | `/api/profile/<id>/message/` | returns all unread messages for a user
+DELETE | `/api/profile/<profile_id>/message/<message_id>/` | mark a message as read
 
 
 

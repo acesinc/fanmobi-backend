@@ -2,7 +2,7 @@ fanmobi-backend
 =========================
 Backend RESTful API for FanMobi
 
-## Geting Started
+## Getting Started
 1. Install Python 3.4.3. Python can be installed by downloading the appropriate
     files [here](https://www.python.org/downloads/release/python-343/). Note
     that Python 3.4 includes both `pip` and `venv`, a built-in replacement
@@ -23,7 +23,8 @@ Use username `user` password `password` when prompted for authentication info
 
 ## API Notes
 Most of the documentation for the API should be accessed via Swagger. Below are
-some high level descriptions of the various endpoints
+some high level descriptions of the various endpoints that should make
+navigating the Swagger docs a little easier
 
 General notes:
 * PATCH requests are not implemented - don't try and use these
@@ -33,7 +34,9 @@ General notes:
 
 ### Login/Logout
 All requests (other than these) must be authenticated. Session-based
-authentication is used to keep track of the current user
+authentication is used to keep track of the current user. The login endpoint
+will create the user if they don't currently exist - this is the currently
+supported mechanism for creating new users and artists
 
 ####Useful endpoints
 Method | Endpoint | Description
@@ -69,7 +72,7 @@ Permissions: ADMIN has full access, authenticated users have read-only
 Every user of Fanmobi has a Profile. At a minimum, a Profile has an associated
 user with a username and belongs to at least one Group (FAN by default). Trying
 to access a user profile other than your own will result in a 403 (unless you
-are an ADMIN). Once created, **usernames cannot currenty be changed**
+are an ADMIN). Once created, **usernames cannot currently be changed**
 
 Profiles are created automatically when a new user tries to login. Note that
 the POST endpoint to create a new user is not implemented yet
@@ -111,8 +114,3 @@ GET  | `/api/artists-in-radius/` | get artists in radius (km) of coordinates (la
 Like other users, artists are created when a new user tries to login (and specifies
 that they are an artist). The POST endpoint to create a new artist is not fully
 implemented
-
-
-
-
-

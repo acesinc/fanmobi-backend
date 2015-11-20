@@ -71,21 +71,36 @@ user with a username and belongs to at least one Group (FAN by default). Trying
 to access a user profile other than your own will result in a 403 (unless you
 are an ADMIN). Once created, **usernames cannot currenty be changed**
 
+Profiles are created automatically when a new user tries to login. Note that
+the POST endpoint to create a new user is not implemented yet
+
 #### Useful Endpoints
 Method | Endpoint | Usage
 ------ | -------- | -----
-POST | `/api/profile/` | don't use. Profiles are created automatically on login
 GET  | `/api/profile/` | returns all Profiles - ADMIN use only
 GET  | `/api/profile/<id>/` | returns a user's profile
 PUT  | `/api/profile/<id>/` | update a user's profile (currently only for updating a user's location)
-DELETE | `/api/profile/<id>/` | delete a user's profile (no use case yet)
 GET | `/api/profile/<id>/message/` | returns all unread messages for a user
 DELETE | `/api/profile/<profile_id>/message/<message_id>/` | mark a message as read
+GET | `/api/profile/<profile_id>/connected/` | get artist connections
+PUT | `/api/profile/<profile_id>/connected/<artist_id>/` | connect to an artist
+DELETE | `/api/profile/<profile_id>/connected/<artist_id>/` | disconnect from an artist
 
 ### Artist
-In addition to a Profile, artists have additional information associated
-with them
+In addition to a Profile, artists have an ArtistProfile containing additional
+information. Artists can also create messages for their followers and
+update show information
 
+#### Useful Endpoints
+Method | Endpoint | Usage
+------ | -------- | -----
+GET  | `/api/artist/` | returns all Artist profiles (open to any authenticated user)
+GET  | `/api/artist/<id>/` | return information for a single artist
+PUT  | `/api/artist/<id>/` | update artist information
+
+Like other users, artists are created when a new user tries to login (and specifies
+that they are an artist). The POST endpoint to create a new artist is not fully
+implemented
 
 
 

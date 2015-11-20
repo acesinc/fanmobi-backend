@@ -23,7 +23,6 @@ class ProfilePermissions(permissions.BasePermission):
         - FANs and ARTISTS can only view and edit their own info
     """
     def has_permission(self, request, view):
-        logger.debug('view: %s' % view)
         if request.method == 'POST' and not services.is_admin(request.user.username):
             return False
         return True

@@ -57,9 +57,18 @@ class UserShortSerializer(serializers.ModelSerializer):
 
 
 class BasicProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(required=False, read_only=True)
+    user = UserSerializer(required=False)
     class Meta:
         model = models.BasicProfile
+
+    def validate(self, data):
+        logger.debug('inside of BasicProfileSerializer.validate. data: %s' % data)
+        return data
+
+    def create(self, validated_data):
+        username = validated_data['user']['username']
+        logger.debug('trying to create profile for user %s' % username)
+        # TODO: create profile
 
 
 class BasicProfileShortSerializer(serializers.ModelSerializer):
@@ -87,6 +96,8 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
         logger.debug('inside of ArtistProfileSerializer.validate. data: %s' % data)
 
         # get profile info
+        if 'basic_profile' not in data:
+            raise serializers.ValidationError('must provide basic_profile')
         data['current_latitude'] = data['basic_profile'].get('current_latitude', '0')
         data['current_longitude'] = data['basic_profile'].get('current_longitude', '0')
 

@@ -114,10 +114,22 @@ class BasicProfileViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request):
-        if not services.is_admin():
+        if not services.is_admin(request.user.username):
             return Response('Permission Denied',
                 status=status.HTTP_403_FORBIDDEN)
-        return super(BasicProfileViewSet, self).create(self, request)
+        try:
+            logger.debug('inside BasicProfileViewSet.create: data: %s' % request.data)
+            serializer = serializers.BasicProfileSerializer(data=request.data,
+                context={'request': request}, partial=True)
+            if not serializer.is_valid():
+                logger.error('%s' % serializer.errors)
+                return Response(serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            raise e
 
     def list(self, request):
         """
@@ -136,8 +148,12 @@ class ArtistViewSet(viewsets.ModelViewSet):
 
     def create(self, request):
         """
-        Create a new artist
+        Create a new artist (**not implemented yet**)
+
+        For now, artists should be created using the /login endpoint and
+        indicating that the user should be created as an artist
         """
+        return Response('Not implemented', status=status.HTTP_501_NOT_IMPLEMENTED)
         try:
             logger.debug('inside ArtistViewSet.create, data: %s' % request.data)
             serializer = serializers.ArtistProfileSerializer(data=request.data,
@@ -155,6 +171,9 @@ class ArtistViewSet(viewsets.ModelViewSet):
     def update(self, request, pk=None):
         """
         Update an artist
+
+        ** Does not currently work via Swagger**
+        Example request data: `{"basic_profile": {"current_latitude": "53.4", "current_longitude": "-4.3"}, "name": "Great Artist Name", "genres": [{"name": "Blues"}, {"name": "Rock"}]}`
         """
         try:
             logger.debug('inside ArtistViewSet.update, data: %s' % request.data)
@@ -173,6 +192,12 @@ class ArtistViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             raise e
+
+    def list(self, request):
+        """
+        Get all artists
+        """
+        return super(ArtistViewSet, self).list(self, request)
 
 
 # class VenueViewSet(viewsets.ModelViewSet):

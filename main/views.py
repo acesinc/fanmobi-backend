@@ -7,6 +7,8 @@ import math
 import requests
 
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
 from rest_framework import generics
@@ -14,6 +16,7 @@ from rest_framework import permissions as rf_permissions
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework import mixins as mixins
+from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
 
 import main.constants as constants
@@ -100,6 +103,9 @@ class BasicProfileViewSet(viewsets.ModelViewSet):
     to at least one Group (FAN by default)
 
     `current_latitude` and `current_longitude` are in Decimal Degrees
+
+    Example request data that includes an avatar (this won't work from Swagger):
+    `{"current_latitude": "5.4", "current_longitude": "-4.3", "avatar": {"id": 1}}`
     """
     # permission_classes = (permissions.IsFan,)
     serializer_class = serializers.BasicProfileSerializer
@@ -129,7 +135,7 @@ class BasicProfileViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            raise e
+            return Response('Error', status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request):
         """
@@ -166,7 +172,7 @@ class ArtistViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            raise e
+            return Response('Error', status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None):
         """
@@ -191,7 +197,7 @@ class ArtistViewSet(viewsets.ModelViewSet):
             return Response('Artist does not exist', status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
-            raise e
+            return Response('Error', status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request):
         """
@@ -702,4 +708,73 @@ def ArtistInRadiusView(request):
     serializer = serializers.ArtistProfileSerializer(artists_in_radius, many=True,
         context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ImageViewSet(viewsets.ModelViewSet):
+    def get_queryset(self):
+        return services.get_all_images()
+
+    serializer_class = serializers.ImageSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    parser_classes = (MultiPartParser, JSONParser)
+
+    def create(self, request):
+        """
+        Upload an image (** Does not work from Swagger**)
+
+        Use content_type = `application/form-data`
+
+        Data:
+
+        * `image_type` = `avatar`
+        * `file_extension` = `jpg|png`
+        * `image` = `<FILE>`
+        """
+        try:
+            serializer = serializers.ImageCreateSerializer(data=request.data,
+                context={'request': request})
+            if not serializer.is_valid():
+                logger.error('%s' % serializer.errors)
+                return Response(serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except errors.PermissionDenied:
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            raise e
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = serializers.ImageSerializer(queryset,
+            many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        """
+        Return an image, enforcing access control
+        """
+        pk = int(pk)
+        queryset = self.get_queryset()
+        image = get_object_or_404(queryset, pk=pk)
+        image_path = services.get_image_path(pk, image.image_type)
+        logger.debug('looking for image %s' % image_path)
+        # enforce access control
+        user = services.get_profile(self.request.user.username)
+        content_type = 'image/' + image.file_extension
+        try:
+            with open(image_path, 'rb') as f:
+                return HttpResponse(f.read(), content_type=content_type)
+        except IOError:
+            logger.error('No image found for pk %d' % pk)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def destroy(self, request, pk=None):
+        queryset = self.get_queryset()
+        image = get_object_or_404(queryset, pk=pk)
+        # TODO: remove image from file system
+        image.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 

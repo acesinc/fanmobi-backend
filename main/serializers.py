@@ -6,6 +6,9 @@ import logging
 import django.contrib.auth
 
 from rest_framework import serializers
+from rest_framework.exceptions import APIException
+
+from PIL import Image
 
 import main.errors as errors
 import main.models as models
@@ -13,6 +16,40 @@ import main.services as services
 
 # Get an instance of a logger
 logger = logging.getLogger('fanmobi')
+
+class ImageSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = models.Image
+        fields = ('url', 'id')
+
+        extra_kwargs = {
+            "id": {
+                "read_only": False,
+                "required": False
+            }
+        }
+
+class ImageCreateSerializer(serializers.Serializer):
+    image_type = serializers.CharField(max_length=64)
+    image = serializers.ImageField()
+    file_extension = serializers.CharField(max_length=10)
+
+    def create(self, validated_data):
+        img = Image.open(validated_data['image'])
+        created_image = models.Image.create_image(img,
+            image_type=validated_data['image_type'],
+            file_extension=validated_data['file_extension'])
+        return created_image
+
+    def to_representation(self, obj):
+        """
+        Since this serializer's fields don't map identically to that of
+        models.Image, explicity set the output (read) representation
+        """
+        return {
+            'id': obj.id,
+            'image_type': obj.image_type
+        }
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,6 +95,7 @@ class UserShortSerializer(serializers.ModelSerializer):
 
 class BasicProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(required=False)
+    avatar = ImageSerializer(required=False)
     class Meta:
         model = models.BasicProfile
 
@@ -69,6 +107,21 @@ class BasicProfileSerializer(serializers.ModelSerializer):
         username = validated_data['user']['username']
         logger.debug('trying to create profile for user %s' % username)
         # TODO: create profile
+
+    def update(self, instance, validated_data):
+        instance.current_latitude = validated_data.get('latitude', None)
+        instance.current_longitude = validated_data.get('longitude', None)
+        if 'avatar' in validated_data:
+            logger.debug('avatar: %s' % validated_data['avatar'])
+            try:
+                avatar_id = int(validated_data['avatar']['id'])
+                logger.debug('looking for avatar with id %s' % avatar_id)
+                avatar = models.Image.objects.get(id=avatar_id)
+                instance.avatar = avatar
+            except Exception:
+                raise APIException('Invalid avatar')
+        instance.save()
+        return instance
 
 
 class BasicProfileShortSerializer(serializers.ModelSerializer):

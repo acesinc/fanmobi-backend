@@ -4,6 +4,7 @@ model definitions for fanmobi
 """
 import logging
 import os
+import uuid
 
 import django.contrib.auth
 from django.core.exceptions import ValidationError
@@ -91,6 +92,8 @@ class BasicProfile(models.Model):
 
     current_latitude = models.CharField(max_length=16, blank=True, null=True)
     current_longitude = models.CharField(max_length=16, blank=True, null=True)
+    avatar = models.ForeignKey('Image', related_name='basic_profile',
+        null=True, blank=True)
 
     def __repr__(self):
         return 'Profile: %s' % self.user.username
@@ -246,20 +249,70 @@ class Show(models.Model):
     def __str__(self):
         return '%s:%s:%s' % (self.artist.name, self.venue.name, self.start)
 
-class Permissions(models.Model):
+class Image(models.Model):
     """
-    Permissions between an artist and a user
+    Image
+
+    (Uploaded) images are stored in a flat directory on the server using a
+    filename like <id>_<image_type>.png
+
+    When creating a new image, use the Image.create_image method, do not
+    use the Image.save() directly
     """
-    artist = models.ForeignKey(ArtistProfile, related_name='permissions')
-    user = models.ForeignKey(BasicProfile, related_name='permissions')
-    # artist can send messags to this user
-    send_messages = models.BooleanField(default=False)
+    # don't need this now, but could be useful later
+    uuid = models.CharField(max_length=36, unique=True)
+    file_extension = models.CharField(max_length=16, default='png')
+    image_type = models.CharField(max_length=64)
 
     def __repr__(self):
-        return 'permissions %s:%s' % (self.artist.basic_profile.user.username, self.user.user.username)
+        return str(self.id)
 
     def __str__(self):
-        return 'permissions %s:%s' % (self.artist.basic_profile.user.username, self.user.user.username)
+        return str(self.id)
+
+    @staticmethod
+    def create_image(pil_img, **kwargs):
+        """
+        Given an image (PIL format) and some metadata, write to file sys and
+        create DB entry
+
+        pil_img: PIL.Image (see https://pillow.readthedocs.org/en/latest/reference/Image.html)
+        """
+        # get DB info for image
+        random_uuid = str(uuid.uuid4())
+        file_extension = kwargs.get('file_extension', 'png')
+        valid_extensions = constants.VALID_IMAGE_EXTENSIONS
+        if file_extension not in valid_extensions:
+            logger.error('Invalid file extension for image: %s' % file_extension)
+            raise Exception('Invalid file extension for image')
+
+        image_type = kwargs.get('image_type', None)
+        if image_type not in constants.VALID_IMAGE_TYPES:
+            logger.error('No image_type (or invaid image_type) provided')
+            raise Exception('No image_type (or invaid image_type) provided')
+
+        # create database entry
+        img = Image(uuid=random_uuid, file_extension=file_extension,
+            image_type=image_type)
+        img.save()
+
+        # write the image to the file system
+        file_name = settings.MEDIA_ROOT + str(img.id) + '_' + image_type + '.' + file_extension
+        # logger.debug('saving image %s' % file_name)
+        pil_img.save(file_name)
+
+        # check size requirements
+        size_bytes = os.path.getsize(file_name)
+        logger.debug('Uploaded image size of %s bytes' % size_bytes)
+        # if size_bytes > image_type.max_size_bytes:
+        #     logger.error('Image size is %d bytes, which is larger than the max \
+        #         allowed %d bytes' % (size_bytes, image_type.max_size_bytes))
+        #     # TODO raise exception and remove file
+        #     return
+
+        # TODO: check width and height
+
+        return img
 
 
 

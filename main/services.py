@@ -2,6 +2,9 @@
 Access the ORM primarily through this
 """
 import logging
+import os.path
+
+from django.conf import settings
 
 import django.contrib.auth
 
@@ -124,3 +127,29 @@ def delete_message(username, message):
     if username != message.artist.basic_profile.user.username and profile.highest_role() not in ['ADMIN']:
         raise errors.PermissionDenied('Cannot delete a message for another artist')
     message.delete()
+
+def get_all_images():
+    images = models.Image.objects.all()
+    return images
+
+def get_image_path(pk, image_type):
+    """
+    Return absolute file path to an image given its id (pk)
+    """
+    image = models.Image.objects.get(id=pk)
+    image_path = settings.MEDIA_ROOT + '/' + str(image.id) + '_' + image_type + '.' + image.file_extension
+    if os.path.isfile(image_path):
+        return image_path
+    else:
+        logger.error('image for pk %d does not exist' % pk)
+        # TODO: raise exception
+        return '/does/not/exist'
+
+def get_image_by_id(id):
+    # Since this is effectively only metadata about the image and not the image
+    # itself, access control is not enforced here. That is done when the image
+    # itself is served
+    try:
+        return models.Image.objects.get(id=id)
+    except models.Image.DoesNotExist:
+        return None

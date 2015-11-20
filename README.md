@@ -68,6 +68,19 @@ Method | Endpoint | Description
 GET | `/api/genre/` | Get all genres
 
 Permissions: ADMIN has full access, authenticated users have read-only
+
+### Image
+Images for use with avatars. Images are stored on disk (not in the database).
+All Profiles can have an associated avatar (so they are not limited to artists)
+
+Method | Endpoint | Description
+------ | -------- | -----
+GET | `/api/image/` | Get all images
+POST | `/api/image/` | Upload an image (don't use Swagger to test this)
+GET | `/api/image/<id>` | Get an image
+
+Permissions: Authenticated has full access
+
 ### Profile
 Every user of Fanmobi has a Profile. At a minimum, a Profile has an associated
 user with a username and belongs to at least one Group (FAN by default). Trying
@@ -82,7 +95,7 @@ Method | Endpoint | Usage
 ------ | -------- | -----
 GET  | `/api/profile/` | returns all Profiles - ADMIN use only
 GET  | `/api/profile/<id>/` | returns a user's profile
-PUT  | `/api/profile/<id>/` | update a user's profile (currently only for updating a user's location)
+PUT  | `/api/profile/<id>/` | update a user's profile (cannot update avatar from Swagger)
 GET | `/api/profile/<id>/message/` | returns all unread messages for a user
 DELETE | `/api/profile/<profile_id>/message/<message_id>/` | mark a message as read
 GET | `/api/profile/<profile_id>/connected/` | get artist connections

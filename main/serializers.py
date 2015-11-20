@@ -120,6 +120,8 @@ class BasicProfileSerializer(serializers.ModelSerializer):
                 instance.avatar = avatar
             except Exception:
                 raise APIException('Invalid avatar')
+        else:
+            instance.avatar = None
         instance.save()
         return instance
 

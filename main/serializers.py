@@ -57,7 +57,7 @@ class UserShortSerializer(serializers.ModelSerializer):
 
 
 class BasicProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(required=False)
+    user = UserSerializer(required=False, read_only=True)
     class Meta:
         model = models.BasicProfile
 

@@ -20,6 +20,16 @@ def get_profile(username):
     except models.BasicProfile.DoesNotExist:
         return None
 
+def get_profile_by_id(id):
+    """
+    Get a user's Profile by id
+    """
+    try:
+        profile = models.BasicProfile.objects.get(id=id)
+        return profile
+    except models.BasicProfile.DoesNotExist:
+        return None
+
 def is_admin(username):
     try:
         profile = get_profile(username)
@@ -29,6 +39,23 @@ def is_admin(username):
         return False
     except Exception:
         return False
+
+def can_access(current_username, requested_profile_id):
+    """
+    Determine if a user should have access to another user's profile
+
+    Args:
+        current_username: username currently logged in
+        requested_profile_id: id of models.Profile to access
+    """
+    if is_admin(current_username):
+        return True
+    profile = get_profile_by_id(requested_profile_id)
+    if not profile:
+        return False
+    if profile.user.username != current_username:
+        return False
+    return True
 
 def get_all_genres():
     return models.Genre.objects.all()
@@ -73,7 +100,7 @@ def get_all_unread_messages(username):
     messages = models.Message.objects.filter(artist__id__in=artist_ids)
     # and remvove the messages that have been dismissed
     dismissed_messages = messages.filter(dismissed_by__in=[profile.id])
-    unread_messages = [i for i in messages if i not in dismissed_messages]
+    unread_messages = messages.exclude(id__in=[msg.id for msg in dismissed_messages])
     return unread_messages
 
 def mark_message_as_read(username, message):

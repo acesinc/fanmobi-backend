@@ -106,24 +106,26 @@ class BasicProfileViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.ProfilePermissions,)
 
     def get_queryset(self):
-        username = self.request.user.username
-        if services.is_admin(username):
-            role = self.request.query_params.get('role', None)
-            if role:
-                queryset = services.get_profiles_by_role(role)
-            else:
-                queryset = services.get_all_profiles()
-            return queryset
+        role = self.request.query_params.get('role', None)
+        if role:
+            queryset = services.get_profiles_by_role(role)
         else:
-            # only get this users info
-            queryset = models.BasicProfile.objects.filter(
-                user__username=username)
-            return queryset
+            queryset = services.get_all_profiles()
+        return queryset
+
+    def create(self, request):
+        if not services.is_admin():
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
+        return super(BasicProfileViewSet, self).create(self, request)
 
     def list(self, request):
         """
-        **Returns current users profile unless user is an ADMIN**
+        Get all Profiles (ADMIN only)
         """
+        if not services.is_admin(request.user.username):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         return super(BasicProfileViewSet, self).list(self, request)
 
 
@@ -341,14 +343,22 @@ class FanMessageViewSet(ListDestroyModelViewSet):
     serializer_class = serializers.MessageSerializer
 
     def get_queryset(self):
-        return services.get_all_messages()
+        username = self.request.user.username
+        if services.is_admin(username):
+            return services.get_all_messages()
+        else:
+            return services.get_all_unread_messages(username)
 
     def list(self, request, profile_pk=None):
         """
         Get all unread messages for a user
         """
-        basic_profile = models.BasicProfile.objects.get(id=profile_pk)
-        queryset = services.get_all_unread_messages(basic_profile.user.username)
+        if not services.can_access(request.user.username, profile_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
+
+        requested_user = models.BasicProfile.objects.get(id=profile_pk)
+        queryset = services.get_all_unread_messages(requested_user.user.username)
         # because we override the queryset here, we must
         # manually invoke the pagination methods
         page = self.paginate_queryset(queryset)

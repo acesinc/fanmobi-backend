@@ -26,7 +26,9 @@ Most of the documentation for the API should be accessed via Swagger. Below are
 some high level descriptions of the various endpoints
 
 General notes:
-* PATCH endpoints are not implemented - don't try and use these
+* PATCH requests are not implemented - don't try and use these
+* PUT requests will update an entire record - if data is not provided, it will
+    be treated as null
 * Unless a user is an ADMIN, they only have access to their own data
 
 ### Login/Logout
@@ -55,16 +57,18 @@ Permissions: ADMIN has full access, authenticated users have read-only
 ### Profile
 Every user of Fanmobi has a Profile. At a minimum, a Profile has an associated
 user with a username and belongs to at least one Group (FAN by default). Trying
-to access a user profile other than your own will result in a 404 (unless you
-are an ADMIN)
+to access a user profile other than your own will result in a 403 (unless you
+are an ADMIN). Once created, **usernames cannot currenty be changed**
 
 Method | Endpoint | Usage
 ------ | -------- | -----
 POST | /api/profile/ | don't use. Profiles are created automatically on login
-GET  | /api/profile/ | returns a list of one (the current user) unless user is
-an ADMIN, in which case all users are returned
-PUT  | /api/profile/ | update a user profile
-DELETE /api/profile/ - a user can currently delete their own profile, but there
-    is not currently a use case for this
+GET  | /api/profile/ | returns a list of one (the current user) unless user is an ADMIN, in which case all users are returned
+GET  | /api/profile/<id> | returns a user's profile
+PUT  | /api/profile/<id> | update a user's profile (currently only for updating a user's location)
+DELETE | /api/profile/<id> | delete a user's profile (no use case yet)
+GET | /api/profile/<id>/message/ | returns all unread messages for a user
+DELETE | /api/profile/<profile_id>/message/<message_id>/ | mark a message as read
+
 
 

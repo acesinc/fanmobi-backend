@@ -105,6 +105,7 @@ GET  | `/api/artist/<id>/connected/` | get all users connected to this artist
 GET  | `/api/artist/<id>/message/` | get all messages from this artist
 POST  | `/api/artist/<id>/message/` | create a message from this artist
 DELETE  | `/api/artist/<id>/message/<message_id>/` | delete this message
+GET  | `/api/artists-in-radius/` | get artists in radius (km) of coordinates (latitude and longitude in decimal degrees)
 
 
 Like other users, artists are created when a new user tries to login (and specifies

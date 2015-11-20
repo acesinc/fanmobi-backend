@@ -419,9 +419,12 @@ def LoginView(request):
     """
     User login via Facebook or an 'anonymous' id
 
-    If both are provided, the fb_access_token takes precedence. The artist
-    query parameter is a boolean (either 0/1 or true/false). anonymous_id must
-    be a positive integer, 30 digits or less.
+    If both are provided, the `fb_access_token` takes precedence. The artist
+    query parameter is a boolean (either 0/1 or true/false). `anonymous_id` must
+    be an alphanumeric string of 30 characters or less
+
+    If a user with the corresponding `anonymous_id` or `fb_access_token` is
+    not found, it will be created
     ---
     omit_serializer: true
     parameters_strategy:
@@ -433,11 +436,27 @@ def LoginView(request):
           type: string
         - name: artist
           paramType: query
+    type:
+      username:
+        required: true
+        type: string
+      name:
+        required: true
+        type: string
+      is_artist:
+        required: true
+        type: boolean
+      fb_access_token:
+        required: false
+        type: string
+      msg:
+        required: false
+        type: string
     """
     if 'username' in request.session:
         # already logged in
         r_data = {'username': request.session['username'],
-            'message': 'already logged in as user: %s' % request.session['username']}
+            'msg': 'already logged in as user: %s' % request.session['username']}
         return Response(r_data,
             status=status.HTTP_200_OK)
     user_profile = None
@@ -449,10 +468,14 @@ def LoginView(request):
     if fb_access_token:
         logger.debug('attempting to hit facebook with access_token: %s' % fb_access_token)
         fb_url = '%s/?access_token=%s' % (constants.FACEBOOK_ME_ENDPOINT, fb_access_token)
+        logger.debug('attempting to hit Facebook url: %s' % fb_url)
         r = requests.get(fb_url)
+        if r.status_code == 400:
+            logger.error('Bad request to facebook: %s' % r.text)
+            return Response('Bad request to Facebook: %s' % r.text, status=status.HTTP_400_BAD_REQUEST)
         if r.status_code != 200:
-            logger.error('Error hitting facebook API')
-            return Response('Problem connecting to facebook: %s' % r.text, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error('Error hitting facebook API, got status: %s' % r.status_code)
+            return Response('Problem connecting to facebook: %s' % r.text, status=status.HTTP_400_BAD_REQUEST)
         resp = r.json()
         username = resp['id']
         friendly_name = resp['name']
@@ -466,6 +489,12 @@ def LoginView(request):
             status=HTTP_400_BAD_REQUEST)
 
     user_profile = services.get_profile(username)
+    # if the user is found, check to see if they are an artist or not
+    a = models.ArtistProfile.objects.filter(basic_profile__user__username=username).first()
+    if not a:
+        if is_artist:
+            return Response('User %s is not an artist but tried to log in as one' % username,
+                status=status.HTTP_400_BAD_REQUEST)
     if not user_profile:
         # if user doesn't exist, create them
         kwargs = {}
@@ -482,7 +511,8 @@ def LoginView(request):
         user_profile = p
         logger.info('created user %s - is_artist: %s' % (user_profile.user.username, is_artist))
     request.session['username'] = user_profile.user.username
-    r_data = {'username': username, 'name': friendly_name}
+    r_data = {'username': username, 'name': friendly_name, 'is_artist': is_artist,
+        'facebook_authenticated': bool(fb_access_token)}
     if fb_access_token:
         request.session['fb_access_token'] = fb_access_token
 
@@ -492,8 +522,25 @@ def LoginView(request):
 @api_view(['POST'])
 @permission_classes((rf_permissions.AllowAny,))
 def LogoutView(request):
+    """
+    Logout user
+
+    Provides the `username` of the user that was logged out. Value will be
+    null if no user was logged in
+    ---
+    omit_serializer: true
+    type:
+      username:
+        required: true
+        type: string
+    """
+    if 'username' not in request.session:
+        username = None
+    else:
+        username = request.session['username']
     request.session.flush()
-    return Response('logged out', status=status.HTTP_200_OK)
+    r_data = {'username': username}
+    return Response(r_data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

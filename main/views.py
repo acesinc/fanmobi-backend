@@ -406,6 +406,9 @@ class ArtistConnectionViewSet(ListModelViewSet):
         return Response(serializer.data)
 
 class FanConnectionViewSet(ListUpdateDestroyModelViewSet):
+    """
+    Artist connections
+    """
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = serializers.ArtistProfileShortSerializer
 
@@ -413,6 +416,9 @@ class FanConnectionViewSet(ListUpdateDestroyModelViewSet):
         """
         Get all artists followed by a user
         """
+        if not services.can_access(request.user.username, profile_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         queryset = models.ArtistProfile.objects.filter(connected_users__in=[profile_pk])
         # because we override the queryset here, we must
         # manually invoke the pagination methods
@@ -429,6 +435,9 @@ class FanConnectionViewSet(ListUpdateDestroyModelViewSet):
         """
         Unfollow an artist
         """
+        if not services.can_access(request.user.username, profile_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         try:
             artist = models.ArtistProfile.objects.get(id=pk)
             updated_connected_users = []
@@ -445,12 +454,19 @@ class FanConnectionViewSet(ListUpdateDestroyModelViewSet):
             else:
                 return Response(status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            raise e
+            return Response('Unable to complete the request',
+                status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, pk=None, profile_pk=None):
         """
         Follow an artist
+        ---
+        omit_parameters:
+            - body
         """
+        if not services.can_access(request.user.username, profile_pk):
+            return Response('Permission Denied',
+                status=status.HTTP_403_FORBIDDEN)
         try:
             artist = models.ArtistProfile.objects.get(id=pk)
             basic_profile = models.BasicProfile.objects.get(id=profile_pk)
@@ -460,7 +476,8 @@ class FanConnectionViewSet(ListUpdateDestroyModelViewSet):
             return Response('Permission Denied',
                 status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
-          raise e
+            return Response('Unable to complete the request',
+                status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes((rf_permissions.AllowAny,))

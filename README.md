@@ -18,8 +18,10 @@ Backend RESTful API for FanMobi
     `pip install -r requirements.txt`
 7. Run the server: `./restart_clean_dev_server.sh`
 
-Swagger documentation for the api is available at `http://localhost:8000/docs/`
-Use username `user` password `password` when prompted for authentication info
+Swagger documentation for the api is available at `http://localhost:8001/docs/`
+Hit the `/api/login` link first - most endpoints require authentication. You
+can username (`anonymous_id`): bob (user), alice (user), counting_crows (artist),
+or admin (admin)
 
 ## API Notes
 Most of the documentation for the API should be accessed via Swagger. Below are
@@ -35,8 +37,8 @@ General notes:
 ### Login/Logout
 All requests (other than these) must be authenticated. Session-based
 authentication is used to keep track of the current user. The login endpoint
-will create the user if they don't currently exist - this is the currently
-supported mechanism for creating new users and artists
+will create the user if they don't currently exist - **this is the currently
+supported mechanism for creating new users and artists**
 
 ####Useful endpoints
 Method | Endpoint | Description

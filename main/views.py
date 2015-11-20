@@ -637,7 +637,7 @@ def LoginView(request):
         logger.info('created user %s - is_artist: %s' % (user_profile.user.username, is_artist))
     request.session['username'] = user_profile.user.username
     r_data = {'username': username, 'name': friendly_name, 'is_artist': is_artist,
-        'facebook_authenticated': bool(fb_access_token)}
+        'facebook_authenticated': bool(fb_access_token), 'profile_id': user_profile.id}
     if fb_access_token:
         request.session['fb_access_token'] = fb_access_token
 

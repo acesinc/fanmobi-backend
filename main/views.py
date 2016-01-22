@@ -614,12 +614,6 @@ def LoginView(request):
             status=HTTP_400_BAD_REQUEST)
 
     user_profile = services.get_profile(username)
-    # if the user is found, check to see if they are an artist or not
-    a = models.ArtistProfile.objects.filter(basic_profile__user__username=username).first()
-    if not a:
-        if is_artist:
-            return Response('User %s is not an artist but tried to log in as one' % username,
-                status=status.HTTP_400_BAD_REQUEST)
     if not user_profile:
         # if user doesn't exist, create them
         kwargs = {}

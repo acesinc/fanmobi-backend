@@ -1,0 +1,7 @@
+---
+ # branch or tag name to checkout from git repo
+git_tag_or_branch_name: "master"
+# Optionally re-create the database
+reset_database: false
+# use a static settings.py file instead of a templated one
+use_static_settings_file: false

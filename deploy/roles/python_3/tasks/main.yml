@@ -1,0 +1,41 @@
+---
+- name: Download python source
+  get_url:
+    url: https://www.python.org/ftp/python/{{ python_version }}/Python-{{ python_version}}.tgz
+    dest: "{{ download_dir }}"
+    mode: 0644
+    validate_certs: no
+  become: true
+  become_user: fanmobi
+
+- name: Extract archive
+  unarchive:
+    src: "{{ download_dir }}/Python-{{ python_version }}.tgz"
+    dest: "{{ download_dir }}"
+    copy: no
+  become: true
+  become_user: fanmobi
+
+- name: Configure Python
+  command: chdir={{ download_dir }}/Python-{{ python_version }} ./configure --prefix=/usr/local --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"
+  become: true
+  become_user: fanmobi
+
+- name: Make python
+  command: chdir={{ download_dir }}/Python-{{ python_version }} make
+  become: true
+  become_user: fanmobi
+
+# Install python to /usr/local
+- name: Install python
+  command: chdir={{ download_dir }}/Python-{{ python_version }} make altinstall
+  become: true
+
+- name: Create directory to hold python envs
+  file:
+    path: /usr/local/fanmobi/python-env
+    state: directory
+    owner: fanmobi
+    mode: 0755
+    recurse: true
+  become: true

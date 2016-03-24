@@ -1,0 +1,37 @@
+---
+
+- name: Install dependencies
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python-httplib2 # required to use uri module in ansible
+    - python-selinux # required for ansible
+    - git
+    - vim
+  become: true
+
+- name: Create fanmobi user
+  user:
+    name: fanmobi
+    comment: "fanmobi"
+    # group: fanmobi
+    password: "password"
+  become: true
+
+- name: Create /usr/local/fanmobi directory
+  file:
+    path: /usr/local/ozp
+    owner: fanmobi
+    mode: 0755
+    recurse: true
+    state: directory
+  become: true
+
+- name: Create download directory
+  file:
+    path: "{{ download_dir }}"
+    owner: fanmobi
+    state: directory
+  become: true

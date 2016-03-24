@@ -1,0 +1,58 @@
+---
+- name: Create nginx user
+  user:
+    name: nginx
+    comment: "nginx"
+    # group: nginx
+    password: "password"
+  become: true
+
+- name: Install nginx
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - nginx
+  become: true
+
+  #- name: Copy nginx.conf
+  #  template:
+  #    src: nginx.conf.j2
+  #    dest: /etc/nginx/conf.d/nginx.conf
+  #    owner: nginx
+  #    # group: nginx
+  #    mode: 0644
+  #  become: true
+
+- name: Copy fanmobi nginx conf
+  template:
+    src: fanmobi_nginx.conf.j2
+    dest: /etc/nginx/conf.d/fanmobi.conf
+    owner: nginx
+    # group: nginx
+    mode: 0644
+  become: true
+    #
+    #- name: Copy nginx init.d script
+    #  template:
+    #    src: nginx.initd.j2
+    #    dest: /etc/init.d/nginx
+    #    owner: root
+    #    group: root
+    #    mode: 0755
+    #  become: true
+
+- name: Create directory for static file hosting
+  file:
+    path: /usr/local/fanmobi/frontend/django_static
+    state: directory
+    owner: nginx
+    # group: nginx
+    mode: 0775
+    recurse: true
+  become: true
+
+- name: Ensure nginx is running (and enable it at boot)
+  service: name=nginx state=restarted enabled=yes
+  become: true

@@ -23,7 +23,7 @@
   become: true
 
 - name: Create python env
-  shell: mkdir -p /usr/local/fanmobi/python-env;  /usr/local/bin/pyvenv-3.4 /usr/local/fanmobi/python-env
+  shell: mkdir -p /usr/local/fanmobi/python-env;  python3 -m venv /usr/local/fanmobi/python-env
   become: true
   become_user: fanmobi
 
@@ -33,9 +33,11 @@
 
 - name: Download source from GitHub tag
   git:
-    repo: git://github.com/TradecraftIT/fanmobi-backend.git
+    repo: ssh://git@github.com/TradecraftIT/fanmobi-backend.git
     dest: /usr/local/fanmobi/backend/fanmobi-backend
     accept_hostkey: yes
+    key_file: /home/fanmobi/.ssh/alan_fanmobi_id_rsa
+    force: true
   become: true
   become_user: fanmobi
 
@@ -47,12 +49,12 @@
   become_user: fanmobi
 
 
-- name: Fix Python sandbox problem
-  shell: chown -R fanmobi /usr/local/lib/python3.4/lib2to3/
-  become: true
+  #- name: Fix Python sandbox problem
+  #  shell: chown -R fanmobi /usr/local/lib/python3.4/lib2to3/
+  #  become: true
 
 - name: Install python dependencies
-  shell: source /usr/local/fanmobi/python-env/bin/activate; pip install --upgrade pip; pip install wheel; export PATH=/usr/local/pgsql/bin:$PATH; pip install -r requirements.txt --no-cache-dir -I
+  shell: . /usr/local/fanmobi/python-env/bin/activate && pip3.4 install -r requirements.txt -I
   args:
     chdir: /usr/local/fanmobi/backend/fanmobi-backend
   become: true
@@ -76,10 +78,10 @@
   become: true
   become_user: fanmobi
 
-- name: Copy init.d file
+- name: Copy init file
   copy:
-    src: gunicorn_fanmobi.initd
-    dest: /etc/init.d/gunicorn_fanmobi
+    src: gunicorn.conf
+    dest: /etc/init/gunicorn.conf
     mode: 0755
   become: true
 
@@ -116,12 +118,13 @@
   command: service gunicorn_fanmobi nuke
   become: true
 
-- name: Reinstall the backend (also installs python dependencies from release)
-  command: service gunicorn_fanmobi redeploy
+#- name: Reinstall the backend (also installs python dependencies from release)
+- name: Restart the backend
+  command: service gunicorn restart
   become: true
 
 - name: Ensure the service is running (and enable it at boot)
-  service: name=gunicorn_fanmobi state=started enabled=yes
+  service: name=gunicorn state=started enabled=yes
   become: true
   ignore_errors: true
 

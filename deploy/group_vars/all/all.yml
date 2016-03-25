@@ -7,3 +7,6 @@ download_dir: "/usr/local/fanmobi/internet_files"
 site_port: 4440
 # port that gunicorn (for fanmobi-backend) runs on
 api_port: 4433
+# name of private key for GitHub access
+# this file should live in roles/common/files
+github_private_key: alan_fanmobi_id_rsa

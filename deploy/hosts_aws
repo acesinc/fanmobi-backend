@@ -1,0 +1,11 @@
+[all:vars]
+site_fqdn=52.23.197.45
+api_fqdn=52.23.197.45
+
+# TODO
+# db_fqdn
+# frontend_fqdn
+# image_fqdn
+
+[fanmobi]
+52.23.197.45

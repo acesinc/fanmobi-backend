@@ -29,6 +29,7 @@ def run():
     """
     Creates basic sample data
     """
+    # TODO: Check to see if DB is empty - if not, don't run!
     # Create Groups
     models.BasicProfile.create_groups()
 

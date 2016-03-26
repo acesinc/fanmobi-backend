@@ -6,3 +6,5 @@ __pycache__
 media/
 static/
 migrations
+*id_rsa
+*id_rsa.pub

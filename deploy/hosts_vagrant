@@ -1,0 +1,11 @@
+[all:vars]
+site_fqdn=192.168.33.10
+api_fqdn=192.168.33.10
+# TODO
+# db_fqdn
+# frontend_fqdn
+# image_fqdn
+
+[fanmobi]
+#127.0.0.1:2222
+192.168.33.10

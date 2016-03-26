@@ -1,0 +1,22 @@
+---
+- name: Install dependencies
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python3-pip
+    - python3.4-venv
+    - libjpeg-dev # for pillow
+    - libjpeg8-dev # for pillow
+    - libyaml-dev # for pillow??
+  become: true
+
+- name: Create directory to hold python envs
+  file:
+    path: /usr/local/fanmobi/python-env
+    state: directory
+    owner: fanmobi
+    mode: 0755
+    recurse: true
+  become: true

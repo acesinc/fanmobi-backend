@@ -3,7 +3,7 @@ server {
   listen {{ site_port }};
   server_name {{ site_fqdn }};
   location / {
-    proxy_pass http://{{ api_fqdn }}:{{ api_port }};
+    proxy_pass http://localhost:{{ api_port }};
     proxy_set_header Host $http_host;
     proxy_set_header X-Real-IP $remote_addr;
 

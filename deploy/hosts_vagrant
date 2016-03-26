@@ -1,9 +1,8 @@
 [all:vars]
-#site_fqdn=ec2-52-0-231-183.compute-1.amazonaws.com
 site_fqdn=192.168.33.10
+api_fqdn=192.168.33.10
 # TODO
 # db_fqdn
-api_fqdn=192.168.33.10
 # frontend_fqdn
 # image_fqdn
 

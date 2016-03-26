@@ -3,25 +3,75 @@ fanmobi-backend
 Backend RESTful API for FanMobi
 
 ## Getting Started
-1. Install Python 3.4.3. Python can be installed by downloading the appropriate
-    files [here](https://www.python.org/downloads/release/python-343/). Note
-    that Python 3.4 includes both `pip` and `venv`, a built-in replacement
-    for the `virtualenv` package
-2. Create a new python environment using python 3.4.x. First, create a new
-    directory where this environment will live, for example, in
-    `~/python_envs/fanmobi`. Now create a new environment there:
-    `python3.4 -m venv ENV` (where `ENV` is the path you used above)
-3. Active the new environment: `source ENV/bin/activate`
-4. Set Python 3.4 as default `alias python='~/py3env/bin/python3.4'`
-5. Install Python development headers `sudo apt-get install python3-dev`
-6. Install the necessary dependencies into this python environment:
-    `pip install -r requirements.txt`
-7. Run the server: `./restart_clean_dev_server.sh`
+Ansible can be used to provision a new Ubuntu 14.04 box with the Fanmobi
+backend REST service. This has been tested with both Vagrant and AWS
+boxes. In either case, the first step is to create a public/private keypair
+and upload the public key to GitHub so that Ansible can clone the
+private GitHub repo
 
-Swagger documentation for the api is available at `http://localhost:8001/docs/`
-Hit the `/api/login` link first - most endpoints require authentication. You
-can username (`anonymous_id`): bob (user), alice (user), counting_crows (artist),
+### Configure GitHub Keypair
+This GitHub repo is private, so in order to run these Ansible scripts (that
+clone the repo), you'll need to do the following:
+
+1. Create a public/private ssh keypair using `ssh-keygen -t rsa -b 4096 -C "your_email@example.com"`.
+DO NOT set a passprhase on the private key
+
+2. Upload the public key to GitHub, as a "Deploy Key" in the `fanmobi-backend`
+repository. Leave it as read-only.
+
+3. Move your private key to `roles/common/files`
+
+4. Change the value of `github_private_key` in `group_vars/all/all.yml` to the
+name of your private key
+
+*NOTE*: Do not put these keys in the git repository
+
+### Deploying locally with Vagrant
+**NOTE:** Due to a current issue with Vagrant 1.8.1 and Ubuntu 14.04, the built-in
+Ansible-Vagrant integration is not working. Until that is resolved, you will
+need to install Ansible yourself on your host machine and use it to provision
+the Vagrant box manually.
+
+You will also need to install VirtualBox and Vagrant
+
+Assuming you've installed Ansible, VirtualBox, and Vagrant, and went through
+the public/private keypair steps above:
+
+1. set `reset_database: true` in `roles/fanmobi_backend/vars/main.yml`
+2. do a `vagrant up` in the `deploy/` directory and wait for it to finish
+3. `ansible-playbook site.yml -i hosts_vagrant -u vagrant -k` in `deploy/`.
+The SSH password is `vagrant`. If you get a "host unreachable" error, look
+in `~/.ssh/known_hosts` for an entry for `192.168.33.10` and remove it
+
+The API should now be available from your host at `http://localhost:10000/docs`,
+or `http://192.168.33.10:10000/docs`
+
+### Deploying to AWS
+First, launch an EC2 instance of type Ubuntu Server 14.04 LTS (HVM). When
+selecting the security group, be sure to choose a group that allows incomming
+HTTP traffic on port 10000
+
+Verify that the machine is up and running: `ssh ubuntu@<public-ip> -i </path/to/aws/private/key.pem>` (this assumes you have already created a public/private keypair
+for use with AWS). If this succeeds, just quit the ssh session.
+
+Edit `deploy/hosts_aws` and set all ip addresses to the public ip address
+of your ec2 instance
+
+run: `ansible-playbook site.yml -i hosts_aws -u ubuntu --private-key </path/to/aws/private/key.pem>`
+
+The API should now be available publicly at `http://<aws-public-ip-or-dns>:10000/docs`
+
+**NOTE:** Hit the `/api/login` link first - most endpoints require authentication.
+
+You can use username (`anonymous_id`): bob (user), alice (user), counting_crows (artist),
 or admin (admin)
+
+### Redeploying code to AWS
+To redeploy new code updates to an AWS box, you can simply run through the
+process above after committing the changes to `master` and pushing. If you
+haven't added any new dependencies and just need to update the code, you
+can speed things up by running the `fanmobi_deploy.yml` playbook instead of
+`site.yml`
 
 ## API Notes
 Most of the documentation for the API should be accessed via Swagger. Below are
@@ -129,3 +179,16 @@ GET  | `/api/artists-in-radius/` | get artists in radius (km) of coordinates (la
 Like other users, artists are created when a new user tries to login (and specifies
 that they are an artist). The POST endpoint to create a new artist is not fully
 implemented
+
+## Configuration Details
+Logs:
+* application: `/usr/local/fanmobi/fanmobi.log`
+* gunicorn: `/var/log/upstart/gunicorn.log`
+* nginx: `/var/log/nginx/error.log`
+
+Notes:
+* User uploaded images (avatars) are stored in `/usr/local/fanmobi/fanmobi_media`
+* The SQLite database is located at `/usr/local/fanmobi/db.sqlite3`
+* Static files (for Swagger docs) are served from `/usr/local/fanmobi/frontend/django_static`
+* Restart nginx: `sudo service nginx restart`
+* Restart gunicorn: `sudo service gunicorn restart`

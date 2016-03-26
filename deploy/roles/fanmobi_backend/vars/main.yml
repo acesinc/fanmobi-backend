@@ -2,4 +2,4 @@
  # branch or tag name to checkout from git repo
 git_tag_or_branch_name: "master"
 # reset database (run sample data generator)
-reset_database: true
+reset_database: false

@@ -1,9 +1,9 @@
 # nginx config
 server {
-  listen 10000;
-  server_name ec2­52­0­231­183.compute­1.amazonaws.com;
+  listen {{ site_port }};
+  server_name {{ site_fqdn }};
   location / {
-    proxy_pass http://127.0.0.1:8001;
+    proxy_pass http://{{ api_fqdn }}:{{ api_port }};
     proxy_set_header Host $http_host;
     proxy_set_header X-Real-IP $remote_addr;
 
@@ -41,6 +41,7 @@ server {
      }
   }
   location /static/ {
-    alias /usr/local/fanmobi/backend/fanmobi-backend/static/;
+    #alias /usr/local/fanmobi/backend/fanmobi-backend/static/;
+    alias /usr/local/fanmobi/frontend/django_static/;
   }
 }

@@ -5,11 +5,6 @@
 
   roles:
     - common
-      #- ssl_certs
+    #- ssl_certs
     - nginx
     - python_3
-      #- node
-      #- postgres_build
-      #- postgres_run
-      #- images
-    #- haproxy

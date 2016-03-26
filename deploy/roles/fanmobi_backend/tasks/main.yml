@@ -1,7 +1,7 @@
 ---
 # These tasks will download fanmobi-backend from GitHub (a branch or tag name).
 # The necessary dependencies are installed, and the backend is deployed using
-# init.d
+# upstart
 
 - name: Remove any existing backend directory
   file:
@@ -27,16 +27,12 @@
   become: true
   become_user: fanmobi
 
-###############################################################################
-#                                 GitHub
-###############################################################################
-
 - name: Download source from GitHub tag
   git:
     repo: ssh://git@github.com/TradecraftIT/fanmobi-backend.git
     dest: /usr/local/fanmobi/backend/fanmobi-backend
     accept_hostkey: yes
-    key_file: /home/fanmobi/.ssh/alan_fanmobi_id_rsa
+    key_file: /home/fanmobi/.ssh/{{ github_private_key }}
     force: true
   become: true
   become_user: fanmobi
@@ -48,13 +44,8 @@
   become: true
   become_user: fanmobi
 
-
-  #- name: Fix Python sandbox problem
-  #  shell: chown -R fanmobi /usr/local/lib/python3.4/lib2to3/
-  #  become: true
-
 - name: Install python dependencies
-  shell: . /usr/local/fanmobi/python-env/bin/activate && pip3.4 install -r requirements.txt -I
+  shell: . /usr/local/fanmobi/python-env/bin/activate && pip3.4 install -r requirements.txt -I # todo: --no-cache?
   args:
     chdir: /usr/local/fanmobi/backend/fanmobi-backend
   become: true
@@ -68,17 +59,7 @@
     mode: 0644
   become: true
 
-# Alternatively, copy an existing settings.py file
-- name: Use non-templated settings.py file
-  when: use_static_settings_file
-  copy:
-    src: settings.py
-    dest: /usr/local/fanmobi/backend/fanmobi-backend/fanmobi/settings.py
-    mode: 0644
-  become: true
-  become_user: fanmobi
-
-- name: Copy init file
+- name: Copy upstart file
   copy:
     src: gunicorn.conf
     dest: /etc/init/gunicorn.conf
@@ -93,30 +74,35 @@
     owner: fanmobi
   become: true
 
-  #- name: Create the directory for the nfs mount (for images)
-  #  file:
-  #    path: /mnt/nfs/fanmobi_media
-  #    state: directory
-  #    recurse: true
-  #    owner: fanmobi
-  #  become: true
-  #
-  #- name: Mount the image directory via nfs
-  #  when: image_fqdn != "localhost"
-  #  mount:
-  #    src: "{{ image_fqdn }}:/usr/local/fanmobi/media"
-  #    name: /mnt/nfs/fanmobi_media
-  #    state: mounted
-  #    fstype: nfs
-  #    opts: rw
-  #  become: true
+# TODO: nfs mount stuff for images
 
-## WARNING: This will destroy all exiting data!!!
-- name: Redeploy the service AND reset the database with sample data
-  when: reset_database
-  run_once: true
-  command: service gunicorn_fanmobi nuke
+- name: Generate static files
+  shell: . /usr/local/fanmobi/python-env/bin/activate && python manage.py collectstatic --noinput
+  args:
+    chdir: /usr/local/fanmobi/backend/fanmobi-backend
   become: true
+  become_user: fanmobi
+
+- name: Coy django static files to nginx directory
+  command: cp -r /usr/local/fanmobi/backend/fanmobi-backend/static/* /usr/local/fanmobi/frontend/django_static
+  become: true
+
+# TODO: change ownership of static files to nginx?
+
+- name: Make migrations and migrate db
+  shell: . /usr/local/fanmobi/python-env/bin/activate && python manage.py makemigrations main && python manage.py migrate
+  args:
+    chdir: /usr/local/fanmobi/backend/fanmobi-backend
+  become: true
+  become_user: fanmobi
+
+- name: Run sample data generator script
+  when: reset_database
+  shell: . /usr/local/fanmobi/python-env/bin/activate && python manage.py runscript sample_data_generator
+  args:
+    chdir: /usr/local/fanmobi/backend/fanmobi-backend
+  become: true
+  become_user: fanmobi
 
 #- name: Reinstall the backend (also installs python dependencies from release)
 - name: Restart the backend
@@ -126,5 +112,4 @@
 - name: Ensure the service is running (and enable it at boot)
   service: name=gunicorn state=started enabled=yes
   become: true
-  ignore_errors: true
 

@@ -1,4 +1,8 @@
 ---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
 
 - name: Install dependencies
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
@@ -10,11 +14,6 @@
     - python-selinux # required for ansible
     - git
     - vim
-    - python3-pip
-    - python3.4-venv
-    - libjpeg-dev
-    - libjpeg8-dev
-    - libyaml-dev
   become: true
 
 - name: Create fanmobi user
@@ -43,7 +42,7 @@
 
 - name: Create /usr/local/fanmobi directory
   file:
-    path: /usr/local/ozp
+    path: /usr/local/fanmobi
     owner: fanmobi
     mode: 0755
     recurse: true

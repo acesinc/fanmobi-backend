@@ -1,12 +1,12 @@
 # this is where files downloaded from the internet (3rd party and fanmobi source)
 #  will be placed
 download_dir: "/usr/local/fanmobi/internet_files"
-# for vagrant boxes, this will be something like 4440 (or whatever port you
-# are forwarding from your host to guest port 4444). For ci or production
-# boxes, it will be the standard 443.
-site_port: 4440
+# The port used to access the site from the host. In production, this should
+# be 443. Today, it's something custom. Some day we should put HAProxy in front
+# of nginx on port 443
+site_port: 10000
 # port that gunicorn (for fanmobi-backend) runs on
-api_port: 4433
+api_port: 8001
 # name of private key for GitHub access
 # this file should live in roles/common/files
 github_private_key: alan_fanmobi_id_rsa

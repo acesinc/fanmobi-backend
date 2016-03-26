@@ -2,6 +2,12 @@
 # These tasks will download fanmobi-backend from GitHub (a branch or tag name).
 # The necessary dependencies are installed, and the backend is deployed using
 # upstart
+#
+- name: Stop the backend (if it's running)
+  when: not reset_database
+  command: service gunicorn stop
+  become: true
+
 
 - name: Remove any existing backend directory
   file:

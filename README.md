@@ -19,7 +19,7 @@ DO NOT set a passprhase on the private key
 2. Upload the public key to GitHub, as a "Deploy Key" in the `fanmobi-backend`
 repository. Leave it as read-only.
 
-3. Move your private key to `roles/common/files`
+3. Move your private key to `deploy/roles/common/files`
 
 4. Change the value of `github_private_key` in `group_vars/all/all.yml` to the
 name of your private key
@@ -37,7 +37,7 @@ You will also need to install VirtualBox and Vagrant
 Assuming you've installed Ansible, VirtualBox, and Vagrant, and went through
 the public/private keypair steps above:
 
-1. set `reset_database: true` in `roles/fanmobi_backend/vars/main.yml`
+1. set `reset_database: true` in `deploy/roles/fanmobi_backend/vars/main.yml`
 2. do a `vagrant up` in the `deploy/` directory and wait for it to finish
 3. `ansible-playbook site.yml -i hosts_vagrant -u vagrant -k` in `deploy/`.
 The SSH password is `vagrant`. If you get a "host unreachable" error, look

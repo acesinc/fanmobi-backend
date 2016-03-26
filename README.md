@@ -58,6 +58,7 @@ Edit `deploy/hosts_aws` and set all ip addresses to the public ip address
 of your ec2 instance
 
 run: `ansible-playbook site.yml -i hosts_aws -u ubuntu --private-key </path/to/aws/private/key.pem>`
+**NOTE:** use username `bitnami` instead of `ubuntu` on our current AWS box
 
 The API should now be available publicly at `http://<aws-public-ip-or-dns>:10000/docs`
 

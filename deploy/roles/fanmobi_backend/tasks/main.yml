@@ -83,8 +83,8 @@
   become: true
   become_user: fanmobi
 
-- name: Coy django static files to nginx directory
-  command: cp -r /usr/local/fanmobi/backend/fanmobi-backend/static/* /usr/local/fanmobi/frontend/django_static
+- name: Copy django static files to nginx directory
+  shell: cp -r /usr/local/fanmobi/backend/fanmobi-backend/static/* /usr/local/fanmobi/frontend/django_static
   become: true
 
 # TODO: change ownership of static files to nginx?

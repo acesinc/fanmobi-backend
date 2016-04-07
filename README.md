@@ -88,8 +88,7 @@ General notes:
 ### Login/Logout
 All requests (other than these) must be authenticated. Session-based
 authentication is used to keep track of the current user. The login endpoint
-will create the user if they don't currently exist - **this is the currently
-supported mechanism for creating new users and artists**
+will create the user if they don't currently exist
 
 ####Useful endpoints
 Method | Endpoint | Description
@@ -163,6 +162,7 @@ update show information
 #### Useful Endpoints
 Method | Endpoint | Usage
 ------ | -------- | -----
+POST | `/api/artist/` | create a new artist (for an existing user)
 GET  | `/api/artist/` | returns all Artist profiles (open to any authenticated user)
 GET  | `/api/artist/<id>/` | return information for a single artist
 PUT  | `/api/artist/<id>/` | update artist information (does not work from Swagger)
@@ -178,8 +178,7 @@ GET  | `/api/artists-in-radius/` | get artists in radius (km) of coordinates (la
 
 
 Like other users, artists are created when a new user tries to login (and specifies
-that they are an artist). The POST endpoint to create a new artist is not fully
-implemented
+that they are an artist).
 
 ## Configuration Details
 Logs:

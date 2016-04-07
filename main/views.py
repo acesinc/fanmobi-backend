@@ -156,7 +156,9 @@ class ArtistViewSet(viewsets.ModelViewSet):
         """
         Create a new artist
 
-        Given an existing username (or user id?), make that user an Artist
+        Given an existing username, make that user an Artist
+
+        Example data: {{"basic_profile": { "user": {"username": "someguy"}}, "name": "someGuysBand"}}
         """
         try:
             logger.debug('inside ArtistViewSet.create, data: %s' % request.data)

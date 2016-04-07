@@ -194,6 +194,9 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
         data['instagram_id'] = data.get('instagram_id', None)
         data['paypal_email'] = data.get('paypal_email', None)
 
+        if self.context['request'].method == 'POST' and not data['name']:
+            raise serializers.ValidationError('Artist name is required')
+
         # next_show set automatically (get next show in models.Show for
         # this artist)
 
@@ -220,6 +223,9 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         logger.debug('inside of ArtistProfileSerializer.create')
         profile = validated_data['basic_profile']
+        if services.user_is_artist(username):
+            raise errors.InvalidInput('User is already an artist')
+
         a = models.ArtistProfile(
             basic_profile=profile,
             name=validated_data['name'],

@@ -166,7 +166,7 @@ def get_artist_id_by_username(username):
     """
     Returns the artist id for a given username, or null
     """
-    artist = models.ArtistProfile.objects.filter(basic_profile__user__username=username)
+    artist = models.ArtistProfile.objects.filter(basic_profile__user__username=username).first()
     if artist:
         return artist.id
     else:

@@ -161,3 +161,14 @@ def user_is_artist(username):
     if models.ArtistProfile.objects.filter(basic_profile__user__username=username).count() > 0:
         return True
     return False
+
+def get_artist_id_by_username(username):
+    """
+    Returns the artist id for a given username, or null
+    """
+    artist = models.ArtistProfile.objects.filter(basic_profile__user__username=username)
+    if artist:
+        return artist.id
+    else:
+        return None
+

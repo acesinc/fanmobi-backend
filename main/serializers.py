@@ -143,7 +143,9 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'basic_profile', 'genres', 'name', 'hometown', 'bio',
             'avatar_url_thumb', 'avatar_url', 'website', 'facebook_id',
             'twitter_id', 'soundcloud_id', 'youtube_id', 'itunes_url',
-            'ticket_url', 'merch_url', 'paypal_email', 'next_show')
+            'ticket_url', 'merch_url', 'paypal_email', 'next_show',
+            'facebook_page_id', 'kickstarter_url', 'vimeo_url', 'google_play_url',
+            'instagram_id')
         read_only_fields = ('id')
 
 
@@ -190,6 +192,11 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
             data['itunes_url'] = data.get('itunes_url', None)
             data['ticket_url'] = data.get('ticket_url', None)
             data['merch_url'] = data.get('merch_url', None)
+            data['facebook_page_id'] = data.get('facebook_page_id', None)
+            data['kickstarter_url'] = data.get('kickstarter_url', None)
+            data['google_play_url'] = data.get('google_play_url', None)
+            data['vimeo_url'] = data.get('vimeo_url', None)
+            data['instagram_id'] = data.get('instagram_id', None)
             data['paypal_email'] = data.get('paypal_email', None)
 
             # next_show set automatically (get next show in models.Show for
@@ -231,6 +238,11 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
             itunes_url=validated_data['itunes_url'],
             ticket_url=validated_data['ticket_url'],
             merch_url=validated_data['merch_url'],
+            facebook_page_id=validated_data['facebook_page_id'],
+            google_play_url=validated_data['google_play_url'],
+            kickstarter_url=validated_data['kickstarter_url'],
+            instagram_id=validated_data['instagram_id'],
+            vimeo_url=validated_data['vimeo_url'],
             paypal_email=validated_data['paypal_email'])
 
         a.save()
@@ -261,6 +273,11 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
             instance.soundcloud_id = validated_data['soundcloud_id']
             instance.itunes_url = validated_data['itunes_url']
             instance.merch_url = validated_data['merch_url']
+            instance.facebook_page_id = validated_data['facebook_page_id']
+            instance.kickstarter_url = validated_data['kickstarter_url']
+            instance.google_play_url = validated_data['google_play_url']
+            instance.vimeo_url = validated_data['vimeo_url']
+            instance.instagram_id = validated_data['instagram_id']
             instance.paypal_email = validated_data['paypal_email']
 
             instance.genres.clear()

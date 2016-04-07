@@ -37,7 +37,7 @@ class Genre(models.Model):
 
 
 class ArtistProfile(models.Model):
-    basic_profile = models.ForeignKey('BasicProfile', related_name='artists')
+    basic_profile = models.OneToOneField('BasicProfile', related_name='artist')
     name = models.CharField(max_length=256)
     hometown = models.CharField(max_length=256, blank=True, null=True)
     bio = models.CharField(max_length=8192, blank=True, null=True)

@@ -96,7 +96,7 @@
 # TODO: change ownership of static files to nginx?
 
 - name: Make migrations and migrate db
-  shell: . /usr/local/fanmobi/python-env/bin/activate && python manage.py makemigrations main && python manage.py migrate
+  shell: rm -rf /usr/local/fanmobi/db.sqlite3; . /usr/local/fanmobi/python-env/bin/activate && python manage.py makemigrations main && python manage.py migrate
   args:
     chdir: /usr/local/fanmobi/backend/fanmobi-backend
   become: true

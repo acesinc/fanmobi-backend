@@ -158,20 +158,15 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
         data['current_latitude'] = data['basic_profile'].get('current_latitude', '0')
         data['current_longitude'] = data['basic_profile'].get('current_longitude', '0')
 
-        # it's an error not to provide a username here if an artist is being created
-        # TODO: is this really now it will work? Also, shouldn't change DB here
-        # in the validate method!
-        if self.context['request'].method == 'POST':
-            username = data['basic_profile']['user'].get('username', None)
-            basic_profile = models.BasicProfile.objects.filter(
-                user__username=username).first()
-            if not basic_profile:
-                kwargs = {'email': data['basic_profile']['user'].get('email', None),
-                    'groups': ['ARTIST']}
-                p = models.BasicProfile.create_user(username, **kwargs)
-                data['basic_profile'] = p
-            else:
-                data['basic_profile'] = basic_profile
+        username = data['basic_profile']['user'].get('username', None)
+        if username != self.context['request'].user.username:
+            raise serializers.ValidationError('currently, an artist profile can only be created or modified for the current user')
+        basic_profile = models.BasicProfile.objects.filter(
+            user__username=username).first()
+        if not basic_profile:
+            raise serializers.ValidationError('cannot create Artist profile for invalid user')
+        else:
+            data['basic_profile'] = basic_profile
 
         # if method is a PATCH, we don't want to arbitrarily set fields to None
         # if they were left out of the request data, since a PATCH request
@@ -179,46 +174,46 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
         # field, it shouldn't be updated
         if self.context['request'].method == 'PATCH':
             # TODO: support PATCH
-            pass
+            raise serializers.ValidationError('PATCH request not yet supported')
+
+        data['name'] = data.get('name', None)
+        data['hometown'] = data.get('hometown', None)
+        data['bio'] = data.get('bio', None)
+        data['website'] = data.get('website', None)
+        data['facebook_id'] = data.get('facebook_id', None)
+        data['twitter_id'] = data.get('twitter_id', None)
+        data['youtube_id'] = data.get('youtube_id', None)
+        data['soundcloud_id'] = data.get('soundcloud_id', None)
+        data['itunes_url'] = data.get('itunes_url', None)
+        data['ticket_url'] = data.get('ticket_url', None)
+        data['merch_url'] = data.get('merch_url', None)
+        data['facebook_page_id'] = data.get('facebook_page_id', None)
+        data['kickstarter_url'] = data.get('kickstarter_url', None)
+        data['google_play_url'] = data.get('google_play_url', None)
+        data['vimeo_url'] = data.get('vimeo_url', None)
+        data['instagram_id'] = data.get('instagram_id', None)
+        data['paypal_email'] = data.get('paypal_email', None)
+
+        # next_show set automatically (get next show in models.Show for
+        # this artist)
+
+        if 'genres' in data:
+            genres = []
+            for i in data['genres']:
+                g = models.Genre.objects.get(name=i['name'])
+                genres.append(g)
+            data['genres'] = genres
         else:
-            data['name'] = data.get('name', None)
-            data['hometown'] = data.get('hometown', None)
-            data['bio'] = data.get('bio', None)
-            data['website'] = data.get('website', None)
-            data['facebook_id'] = data.get('facebook_id', None)
-            data['twitter_id'] = data.get('twitter_id', None)
-            data['youtube_id'] = data.get('youtube_id', None)
-            data['soundcloud_id'] = data.get('soundcloud_id', None)
-            data['itunes_url'] = data.get('itunes_url', None)
-            data['ticket_url'] = data.get('ticket_url', None)
-            data['merch_url'] = data.get('merch_url', None)
-            data['facebook_page_id'] = data.get('facebook_page_id', None)
-            data['kickstarter_url'] = data.get('kickstarter_url', None)
-            data['google_play_url'] = data.get('google_play_url', None)
-            data['vimeo_url'] = data.get('vimeo_url', None)
-            data['instagram_id'] = data.get('instagram_id', None)
-            data['paypal_email'] = data.get('paypal_email', None)
+            data['genres'] = []
 
-            # next_show set automatically (get next show in models.Show for
-            # this artist)
-
-            if 'genres' in data:
-                genres = []
-                for i in data['genres']:
-                    g = models.Genre.objects.get(name=i['name'])
-                    genres.append(g)
-                data['genres'] = genres
-            else:
-                data['genres'] = []
-
-            if 'connected_users' in data:
-                users = []
-                for i in data['connected_users']:
-                    u = models.BasicProfile.objects.get(user__username=i['user']['username'])
-                    users.append(u)
-                data['connected_users'] = users
-            else:
-                data['connected_users'] = []
+        if 'connected_users' in data:
+            users = []
+            for i in data['connected_users']:
+                u = models.BasicProfile.objects.get(user__username=i['user']['username'])
+                users.append(u)
+            data['connected_users'] = users
+        else:
+            data['connected_users'] = []
 
         return data
 
@@ -253,51 +248,53 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
         profile.current_latitude = validated_data['current_latitude']
         profile.current_longitude = validated_data['current_longitude']
         profile.save()
+        # add user to ARTIST group
+        artist_group = django.contrib.auth.models.Group.objects.get(name='ARTIST')
+        profile.user.groups.add(artist_group)
 
         return a
 
     def update(self, instance, validated_data):
         if self.context['request'].method == 'PATCH':
             # TODO: handle PATCHING (partial updates)
-            pass
-        else:
-            # if it's not a partial update, we know every field will be present
-            # in validated_data (even if it's None)
-            instance.hometown = validated_data['hometown']
-            instance.name = validated_data['name']
-            instance.bio = validated_data['bio']
-            instance.website = validated_data['website']
-            instance.facebook_id = validated_data['facebook_id']
-            instance.twitter_id = validated_data['twitter_id']
-            instance.youtube_id = validated_data['youtube_id']
-            instance.soundcloud_id = validated_data['soundcloud_id']
-            instance.itunes_url = validated_data['itunes_url']
-            instance.merch_url = validated_data['merch_url']
-            instance.facebook_page_id = validated_data['facebook_page_id']
-            instance.kickstarter_url = validated_data['kickstarter_url']
-            instance.google_play_url = validated_data['google_play_url']
-            instance.vimeo_url = validated_data['vimeo_url']
-            instance.instagram_id = validated_data['instagram_id']
-            instance.paypal_email = validated_data['paypal_email']
+            raise serializers.ValidationError('PATCH request not yet supported')
+        # if it's not a partial update, we know every field will be present
+        # in validated_data (even if it's None)
+        instance.hometown = validated_data['hometown']
+        instance.name = validated_data['name']
+        instance.bio = validated_data['bio']
+        instance.website = validated_data['website']
+        instance.facebook_id = validated_data['facebook_id']
+        instance.twitter_id = validated_data['twitter_id']
+        instance.youtube_id = validated_data['youtube_id']
+        instance.soundcloud_id = validated_data['soundcloud_id']
+        instance.itunes_url = validated_data['itunes_url']
+        instance.merch_url = validated_data['merch_url']
+        instance.facebook_page_id = validated_data['facebook_page_id']
+        instance.kickstarter_url = validated_data['kickstarter_url']
+        instance.google_play_url = validated_data['google_play_url']
+        instance.vimeo_url = validated_data['vimeo_url']
+        instance.instagram_id = validated_data['instagram_id']
+        instance.paypal_email = validated_data['paypal_email']
 
-            instance.genres.clear()
-            for i in validated_data['genres']:
-                instance.genres.add(i)
-            instance.save()
+        instance.genres.clear()
+        for i in validated_data['genres']:
+            instance.genres.add(i)
+        instance.save()
 
-            instance.connected_users.clear()
-            for i in validated_data['connected_users']:
-                instance.connected_users.add(i)
-            instance.save()
+        instance.connected_users.clear()
+        for i in validated_data['connected_users']:
+            instance.connected_users.add(i)
+        instance.save()
 
-            # support updates to the underlying BasicProfile object
-            profile = instance.basic_profile
-            # support updates to the underlying BasicProfile object
-            profile.current_latitude = validated_data['current_latitude']
-            profile.current_longitude = validated_data['current_longitude']
-            profile.save()
+        # support updates to the underlying BasicProfile object
+        profile = instance.basic_profile
+        # support updates to the underlying BasicProfile object
+        profile.current_latitude = validated_data['current_latitude']
+        profile.current_longitude = validated_data['current_longitude']
+        profile.save()
 
-            return instance
+        return instance
 
 
 class ArtistProfileShortSerializer(serializers.ModelSerializer):

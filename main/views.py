@@ -154,12 +154,10 @@ class ArtistViewSet(viewsets.ModelViewSet):
 
     def create(self, request):
         """
-        Create a new artist (**not implemented yet**)
+        Create a new artist
 
-        For now, artists should be created using the /login endpoint and
-        indicating that the user should be created as an artist
+        Given an existing username (or user id?), make that user an Artist
         """
-        return Response('Not implemented', status=status.HTTP_501_NOT_IMPLEMENTED)
         try:
             logger.debug('inside ArtistViewSet.create, data: %s' % request.data)
             serializer = serializers.ArtistProfileSerializer(data=request.data,
@@ -544,8 +542,8 @@ def LoginView(request):
     """
     User login via Facebook or an 'anonymous' id
 
-    If both are provided, the `fb_access_token` takes precedence. The artist
-    query parameter is a boolean (either 0/1 or true/false). `anonymous_id` must
+    If both are provided, the `fb_access_token` takes precedence.
+    `anonymous_id` must
     be an alphanumeric string of 30 characters or less
 
     If a user with the corresponding `anonymous_id` or `fb_access_token` is
@@ -559,8 +557,6 @@ def LoginView(request):
           type: string
         - name: anonymous_id
           type: string
-        - name: artist
-          paramType: query
     type:
       username:
         required: true
@@ -568,9 +564,6 @@ def LoginView(request):
       name:
         required: true
         type: string
-      is_artist:
-        required: true
-        type: boolean
       fb_access_token:
         required: false
         type: string
@@ -587,7 +580,6 @@ def LoginView(request):
     user_profile = None
     username = None
     friendly_name = None
-    is_artist = utils.str_to_bool(request.query_params.get('artist', False))
     fb_access_token = request.data.get('fb_access_token', None)
     anonymous_id = request.data.get('anonymous_id', None)
     if fb_access_token:
@@ -617,24 +609,18 @@ def LoginView(request):
     if not user_profile:
         # if user doesn't exist, create them
         kwargs = {}
-        if is_artist:
-            kwargs['groups'] = ['FAN', 'ARTIST']
-        else:
-            kwargs['groups'] = ['FAN']
+        kwargs['groups'] = ['FAN']
 
         kwargs['name'] = friendly_name
         p = models.BasicProfile.create_user(username, **kwargs)
-        if is_artist:
-            a = models.ArtistProfile(basic_profile=p, name=friendly_name)
-            a.save()
         user_profile = p
-        logger.info('created user %s - is_artist: %s' % (user_profile.user.username, is_artist))
+        logger.info('created user %s' % (user_profile.user.username))
     request.session['username'] = user_profile.user.username
-    r_data = {'username': username, 'name': friendly_name, 'is_artist': is_artist,
-        'facebook_authenticated': bool(fb_access_token), 'profile_id': user_profile.id}
+    r_data = {'username': username, 'name': friendly_name,
+        'facebook_authenticated': bool(fb_access_token), 'profile_id': user_profile.id,
+        'is_artist': services.user_is_artist(username)}
     if fb_access_token:
         request.session['fb_access_token'] = fb_access_token
-
 
     return Response(r_data, status=status.HTTP_200_OK)
 

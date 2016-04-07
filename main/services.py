@@ -153,3 +153,11 @@ def get_image_by_id(id):
         return models.Image.objects.get(id=id)
     except models.Image.DoesNotExist:
         return None
+
+def user_is_artist(username):
+    """
+    Returns True if user is an artist
+    """
+    if models.ArtistProfile.objects.filter(basic_profile__user__username=username).count() > 0:
+        return True
+    return False

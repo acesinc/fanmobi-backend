@@ -620,8 +620,7 @@ def LoginView(request):
     request.session['username'] = user_profile.user.username
     artist_id = services.get_artist_id_by_username(username)
     r_data = {'username': username, 'name': friendly_name, 'artist_id': artist_id,
-        'facebook_authenticated': bool(fb_access_token), 'profile_id': user_profile.id,
-        'is_artist': services.user_is_artist(username)}
+        'facebook_authenticated': bool(fb_access_token), 'profile_id': user_profile.id}
     if fb_access_token:
         request.session['fb_access_token'] = fb_access_token
 

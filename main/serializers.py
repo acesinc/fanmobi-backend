@@ -223,7 +223,7 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         logger.debug('inside of ArtistProfileSerializer.create')
         profile = validated_data['basic_profile']
-        if services.user_is_artist(username):
+        if services.user_is_artist(profile.user.username):
             raise errors.InvalidInput('User is already an artist')
 
         a = models.ArtistProfile(

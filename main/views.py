@@ -149,7 +149,7 @@ class BasicProfileViewSet(viewsets.ModelViewSet):
 
 class ArtistViewSet(viewsets.ModelViewSet):
     queryset = services.get_all_artists()
-    permission_classes = (permissions.IsArtistOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = serializers.ArtistProfileSerializer
 
     def create(self, request):

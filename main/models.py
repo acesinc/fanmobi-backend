@@ -21,7 +21,7 @@ import main.constants as constants
 logger = logging.getLogger('fanmobi')
 
 # TODO:
-# - upload avatar (and thumb) - image storage and serving
+# - upload avatar (and icon) - image storage and serving
 
 class Genre(models.Model):
     """
@@ -41,8 +41,6 @@ class ArtistProfile(models.Model):
     name = models.CharField(max_length=256)
     hometown = models.CharField(max_length=256, blank=True, null=True)
     bio = models.CharField(max_length=8192, blank=True, null=True)
-    avatar_url_thumb = models.URLField(max_length=2048, blank=True, null=True)
-    avatar_url = models.URLField(max_length=2048, blank=True, null=True)
     website = models.URLField(max_length=2048, blank=True, null=True)
     facebook_id = models.CharField(max_length=256, blank=True, null=True)
     facebook_page_id = models.CharField(max_length=256, blank=True, null=True)
@@ -97,7 +95,9 @@ class BasicProfile(models.Model):
 
     current_latitude = models.CharField(max_length=16, blank=True, null=True)
     current_longitude = models.CharField(max_length=16, blank=True, null=True)
-    avatar = models.ForeignKey('Image', related_name='basic_profile',
+    avatar = models.ForeignKey('Image', related_name='basic_profile_avatar',
+        null=True, blank=True)
+    icon = models.ForeignKey('Image', related_name='basic_profile_icon',
         null=True, blank=True)
 
     def __repr__(self):

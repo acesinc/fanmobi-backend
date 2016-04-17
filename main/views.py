@@ -575,8 +575,12 @@ def LoginView(request):
     """
     if 'username' in request.session:
         # already logged in
-        r_data = {'username': request.session['username'],
-            'msg': 'already logged in as user: %s' % request.session['username']}
+        username = request.session['username']
+        user_profile = services.get_profile(username)
+        r_data = {'username': username,
+            'msg': 'already logged in as user: %s' % username,
+            'id': user_profile.id,
+            'artist_id': services.get_artist_id_by_username(username)}
         return Response(r_data,
             status=status.HTTP_200_OK)
     user_profile = None
@@ -708,8 +712,8 @@ class ImageViewSet(viewsets.ModelViewSet):
 
         Data:
 
-        * `image_type` = `avatar`
-        * `file_extension` = `jpg|png`
+        * `image_type` = `avatar`|`icon`
+        * `file_extension` = `jpg`|`png`
         * `image` = `<FILE>`
         """
         try:

@@ -96,6 +96,7 @@ class UserShortSerializer(serializers.ModelSerializer):
 class BasicProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(required=False)
     avatar = ImageSerializer(required=False)
+    icon = ImageSerializer(required=False)
     class Meta:
         model = models.BasicProfile
 
@@ -122,15 +123,30 @@ class BasicProfileSerializer(serializers.ModelSerializer):
                 raise APIException('Invalid avatar')
         else:
             instance.avatar = None
+
+        if 'icon' in validated_data:
+            logger.debug('icon: %s' % validated_data['icon'])
+            try:
+                icon_id = int(validated_data['icon']['id'])
+                logger.debug('looking for icon with id %s' % icon_id)
+                icon = models.Image.objects.get(id=icon_id)
+                instance.icon = icon
+            except Exception:
+                raise APIException('Invalid icon')
+        else:
+            instance.icon = None
         instance.save()
         return instance
 
 
 class BasicProfileShortSerializer(serializers.ModelSerializer):
     user = UserShortSerializer()
+    avatar = ImageSerializer(required=False)
+    icon = ImageSerializer(required=False)
     class Meta:
         model = models.BasicProfile
-        fields = ('user', 'id', 'current_latitude', 'current_longitude')
+        fields = ('user', 'id', 'current_latitude', 'current_longitude',
+                'avatar', 'icon')
         read_only_fields = ('id',)
 
 
@@ -141,7 +157,7 @@ class ArtistProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ArtistProfile
         fields = ('id', 'basic_profile', 'genres', 'name', 'hometown', 'bio',
-            'avatar_url_thumb', 'avatar_url', 'website', 'facebook_id',
+            'website', 'facebook_id',
             'twitter_id', 'soundcloud_id', 'youtube_id', 'itunes_url',
             'ticket_url', 'merch_url', 'paypal_email', 'next_show',
             'facebook_page_id', 'kickstarter_url', 'vimeo_url', 'google_play_url',

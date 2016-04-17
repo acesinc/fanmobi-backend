@@ -9,3 +9,4 @@ migrations
 *id_rsa
 *id_rsa.pub
 *.swp
+.idea

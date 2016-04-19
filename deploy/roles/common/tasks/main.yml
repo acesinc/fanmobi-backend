@@ -14,6 +14,9 @@
     - python-selinux # required for ansible
     - git
     - vim
+    - libjpeg-dev
+    - libfreetype6-dev
+    - zlib1g-dev
   become: true
 
 - name: Create fanmobi user

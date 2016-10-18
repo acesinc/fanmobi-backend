@@ -44,8 +44,8 @@
 :admin-login = Basic YWRtaW46cGFzc3dvcmQ= 
 :counting_crows-login = Basic Y291bnRpbmdfY3Jvd3M6cGFzc3dvcmQ=
 
-:fanmobi-auth := :counting_crows-login
-:anonymous_id = counting_crows
+:fanmobi-auth := :bob-login
+:anonymous_id = bob
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 #    Login/Logout 
@@ -164,23 +164,64 @@ Authorization: :fanmobi-auth
 # Get my profile 
 #
 # 
-GET :api-root/profile/5/
+GET :api-root/profile/1/
 Accept: application/json
 Authorization: :fanmobi-auth 
 
 #
 # Update my profile
 #
-# TODO: this doesn't seem to work
+# TODO: this works to update a user's avatar, but the location data doesn't
+#       stick - it always gets set to null after this call
 #
-PUT :api-root/profile/7/
+PUT :api-root/profile/1/
 Accept: application/json
 Content-Type: application/json
 Authorization: :fanmobi-auth 
 
 {
-  "current_latitude": "5.4", "current_longitude": "-4.3"
+  "current_latitude": "39.2904",
+  "current_longitude": "-76.6122",
+  "avatar": {
+    "id": 3
+  }
 }
+
+#
+# Get all unread messages for this user
+#
+GET :api-root/profile/4/message/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Mark a message as read for a user
+#
+DELETE :api-root/profile/4/message/1/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Get all artists this user follows
+#
+GET :api-root/profile/4/connected/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Disconnect from an artist
+#
+DELETE :api-root/profile/4/connected/1/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Connect to an artist
+#
+PUT :api-root/profile/4/connected/1/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -225,6 +266,8 @@ Authorization: :fanmobi-auth
 # Note that both basic_profile.user.username and name are required. Also,
 # the username provided must match that of the currently logged in user
 #
+# TODO: update of Avatar or Icon is not supported here yet
+#
 PUT :api-root/artist/1/
 Accept: application/json
 Content-Type: application/json
@@ -235,8 +278,8 @@ Authorization: :fanmobi-auth
     "user": {
       "username": "counting_crows"
     },
-    "current_latitude": "5.4",
-    "current_longitude": "-4.3"
+    "current_latitude": "39.2904",
+    "current_longitude": "-76.6122"
   },
   "name": "counting_crows",
   "genres": [
@@ -247,4 +290,150 @@ Authorization: :fanmobi-auth
   "hometown": "Baltimore"
 }
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#    Shows
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+#
+# Get shows for artist
+#
+GET :api-root/artist/1/show/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Add a show for this artist
+#
+# Times are in format: 2015-09-19T00:00:00Z (YYYY-MM-DDTHH:MM:SSZ)
+#
+POST :api-root/artist/1/show/
+Accept: application/json
+Content-Type: application/json
+Authorization: :fanmobi-auth 
+
+{
+  "start": "2016-12-24T20:00Z",
+  "end": "2016-12-25T00:00Z",
+  "latitude": "38.918229",
+  "longitude": "-77.023795",
+  "venue_name": "9:30 Club"
+}
+
+#
+# Edit an existing show
+#
+# TODO: doesn't seem to be a way to do this yet
+
+#
+# Delete an existing show
+#
+# TODO: can't do this w/o getting the pk (id) back 
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#    Messages
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#
+# Get all messages for an artist
+#
+GET :api-root/artist/1/message/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Create a message for an artist
+#
+POST :api-root/artist/1/message/
+Accept: application/json
+Content-Type: application/json
+Authorization: :fanmobi-auth 
+
+{
+  "text": "Hello fans from the CCs!"
+}
+
+#
+# Delete a message from an artist
+#
+
+DELETE :api-root/artist/1/message/2/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#    Connections
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#
+# Get all users connected to an artist
+#
+
+GET :api-root/artist/1/connected/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#    Artists-in-Radius
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#
+# Get artists with a radius (km) of given coordinates (Decimal Degrees)
+#
+:radius = 150
+# coordinates for Philadelphia (counting crows were put in Baltimore)
+:latitude = 39.9526
+:longitude = -75.1652
+
+GET :api-root/artists-in-radius/?radius=:radius&latitude=:latitude&longitude=:longitude
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#    Image 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#
+# Get all images
+#
+GET :api-root/image/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Upload an image
+#
+#  This won't work from Emacs restclient. Use something like Postman to test
+#
+#  form data:
+#       image_type = avatar|icon
+#       file_extension = jpg|png
+#       image = <FILE>
+#
+POST :api-root/image/
+Accept: application/json
+Content-Type: multipart/form-data
+Authorization: :fanmobi-auth 
+
+image_type=avatar
+image=<FILE>
+file_extension=jpeg
+
+#
+# Get an image
+#
+# This does technically work from Emacs restclient but is better done in
+# a tool like Postman
+#
+GET :api-root/image/3/
+Authorization: :fanmobi-auth 
+
+#
+# Delete an image
+#
+# TODO: this does not actually delete the image from the disk
+#
+DELETE :api-root/image/3/
+Authorization: :fanmobi-auth 

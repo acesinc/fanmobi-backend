@@ -2,6 +2,31 @@ fanmobi-backend
 =========================
 Backend RESTful API for FanMobi
 
+## Getting Started in Local Dev Mode
+If you already have Python3 and SQLite installed, you can run locally in dev 
+mode without installing Ansible, Nginx, or Gunicorn:
+
+Make sure libjpeg and libpng are installed. On OS X, you can do this via 
+`brew install libjpeg` and `brew install libpng`. These libraries need to be
+installed before the Pillow library is installed.
+
+1. Clone the repo, `cd` into it
+2. `mkdir media` (this is where images (avatars and icons) will be stored)
+3. create a new python3 env and source it
+4. `pip install -r requirements.txt`
+5. `python manage.py collectstatic --noinput` (generate static files for Swagger)
+6. `python manage.py makemigrations main && python manage.py migrate`
+7. `python manage.py runscript sample_data_generator`
+8. `python manage.py runserver 0.0.0.0:8000` 
+
+Swagger docs should be available at `http://localhost:8000/docs`
+
+**NOTE:** Hit the `/api/login` link first - most endpoints require 
+authentication
+
+You can use username (`anonymous_id`): bob (user), alice (user), 
+counting_crows (artist), or admin (admin)
+
 ## Getting Started
 Ansible can be used to provision a new Ubuntu 14.04 box with the Fanmobi
 backend REST service. This has been tested with both Vagrant and AWS

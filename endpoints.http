@@ -1,0 +1,250 @@
+# -*- restclient -*-
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#                         Login/Logout
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+# The API currently supports Basic Authentication as well as OAuth2.0 via
+# Facebook. 
+#
+# For Basic Authentication, set the Authorization header as follows (using the
+# user bob with password 'password') as per
+# https://en.wikipedia.org/wiki/Basic_access_authentication:
+#
+# echo -n "bob:password" | base64 (yields Ym9iOnBhc3N3b3Jk)
+# Authorization: Basic Ym9iOnBhc3N3b3Jk
+#
+# Note that the Basic Authentication mechanism provides no encrypting or
+# hashing of the credentials, they are merely base64 encoded and therefore
+# sent in the clear unless HTTPS is used
+#
+#
+# The API also supports OAuth2.0, specifically Facebook's OAuth2.0 provider.
+# Currently (Oct 2016) there are no plans for a Fanmobi web app, only native
+# apps, and the 'Connect with Facebook/etc' functionality will live in the
+# native code. Therefore, this API assumes the caller has already received
+# a valid OAuth token and simply passes it as a parameter when making API
+# calls.
+#
+# Proposed changes to login:
+#
+# 1. remove login via basic authentication
+# 2. only support login via external service (facebook, Google, Twitter).
+# 3. modify the /login/ endpoint to take a oauth_token (as before) but:
+#           - make a request to a protected endpoint using the token to get
+#             the user's 'friendly name' and unique id
+#           - using the above info, generate a JWT and return to the caller
+#           - caller now includes this JWT in subsequent api requests
+
+
+:api-root = http://127.0.0.1:8000/api
+
+:bob-login = Basic Ym9iOnBhc3N3b3Jk
+:alice-login = Basic YWxpY2U6cGFzc3dvcmQ=
+:admin-login = Basic YWRtaW46cGFzc3dvcmQ= 
+:counting_crows-login = Basic Y291bnRpbmdfY3Jvd3M6cGFzc3dvcmQ=
+
+:fanmobi-auth := :counting_crows-login
+:anonymous_id = counting_crows
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#    Login/Logout 
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#
+# Login
+#
+POST :api-root/login/
+Content-Type: application/json
+
+{
+  "anonymous_id": ":anonymous_id"
+}
+
+#
+# Logout
+#
+POST :api-root/logout/
+
+# Login via Facebook auth token
+POST :api-root/login/
+Content-Type: application/json
+
+{
+  "fb_access_token": ""
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#    Genre 
+#
+#    Only Admins can create, edit, or delete genres at this time
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#
+# Get all genres 
+# 
+GET :api-root/genre/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Get specific genres 
+# 
+GET :api-root/genre/1/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Update existing genre 
+# 
+PUT :api-root/genre/1/
+Accept: application/json
+Content-Type: application/json
+Authorization: :fanmobi-auth 
+
+{
+  "name": "Alternative"
+}
+
+#
+# Create a new genre 
+# 
+POST :api-root/genre/
+Accept: application/json
+Content-Type: application/json
+Authorization: :fanmobi-auth 
+
+{
+  "name": "Hippie Music"
+}
+
+#
+# Delete a new genre 
+# 
+DELETE :api-root/genre/6/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#    Group 
+#
+#    Only accessible via admins. These are very static - don't worry about
+#    creating endpoints to add, edit, or delete them
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#
+# Get all groups 
+# 
+GET :api-root/group/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#    Profile 
+#
+#    This is the basic 'user'-like table for all Fanmobi users, whether they
+#    are fans, artists, or admins. 
+#
+#    current_latitude and current_longitude are in Decimal Degrees
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#
+# Get all profiles 
+#
+#  Only admins can get all profiles
+# 
+GET :api-root/profile/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Get my profile 
+#
+# 
+GET :api-root/profile/5/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Update my profile
+#
+# TODO: this doesn't seem to work
+#
+PUT :api-root/profile/7/
+Accept: application/json
+Content-Type: application/json
+Authorization: :fanmobi-auth 
+
+{
+  "current_latitude": "5.4", "current_longitude": "-4.3"
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+#                         Artists 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#
+# Get all artists 
+# 
+GET :api-root/artist/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Create a new Artist 
+#
+# Must reference an existing user
+# 
+POST :api-root/artist/
+Content-Type: application/json
+Authorization: :fanmobi-auth 
+
+{
+  "basic_profile": {
+    "user": {
+      "username": "someguy"
+    }
+  },
+  "name": "someGuysBand"
+}
+
+#
+# Get my artist profile
+#
+GET :api-root/artist/1/
+Accept: application/json
+Authorization: :fanmobi-auth 
+
+#
+# Update my artist profile
+#
+# Note that both basic_profile.user.username and name are required. Also,
+# the username provided must match that of the currently logged in user
+#
+PUT :api-root/artist/1/
+Accept: application/json
+Content-Type: application/json
+Authorization: :fanmobi-auth 
+
+{
+  "basic_profile": {
+    "user": {
+      "username": "counting_crows"
+    },
+    "current_latitude": "5.4",
+    "current_longitude": "-4.3"
+  },
+  "name": "counting_crows",
+  "genres": [
+    {
+      "name": "Alternative"
+    }
+  ],
+  "hometown": "Baltimore"
+}
+
+
